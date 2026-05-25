@@ -102,7 +102,7 @@ function WC2026SVGLogo() {
         {/* WORLD CUP text */}
         <path id="topArc" d="M 30 110 A 80 80 0 0 1 190 110" fill="none"/>
         <text fontSize="10.5" fontFamily="Barlow Condensed, sans-serif" fontWeight="700" fill="#E8EDF5" letterSpacing="4">
-          <textPath href="#topArc" startOffset="50%" textAnchor="middle">FIFA WORLD CUP</textPath>
+          <textPath href="#topArc" startOffset="50%" textAnchor="middle">WORLD CUP</textPath>
         </text>
 
         {/* 2026 */}
@@ -160,14 +160,14 @@ export default function HomePage() {
           <div className="animate-fade-in-up delay-200 mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest"
             style={{ background: 'rgba(245,166,35,0.12)', border: '1px solid rgba(245,166,35,0.3)', color: '#F5A623' }}>
             <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: '#F5A623' }} />
-            Juego oficial de predicciones · Mundial 2026
+            Juego de predicciones · Mundial 2026
           </div>
 
           {/* Main title */}
           <h1 className="animate-fade-in-up delay-300 mb-3 leading-none text-shadow-gold"
             style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 'clamp(4rem, 12vw, 8rem)', color: '#E8EDF5', textTransform: 'uppercase', letterSpacing: '-0.01em' }}>
-            POLLA<br />
-            <span className="text-gold-shimmer">MUNDIALISTA</span>
+            MUNDIAL DE<br />
+            <span className="text-gold-shimmer">FUTBOL 2026</span>
           </h1>
 
           <p className="animate-fade-in-up delay-400 mx-auto mb-8 max-w-lg text-lg font-medium text-wc-muted sm:text-xl" style={{ fontFamily: 'Barlow, sans-serif' }}>

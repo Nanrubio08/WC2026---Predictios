@@ -67,7 +67,7 @@ export default function Navbar({ isAuthenticated, user, onLogin, onLogout }: Pro
             <WC2026Badge />
             <span className="hidden sm:flex sm:flex-col sm:leading-tight">
               <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '0.08em', color: '#E8EDF5', textTransform: 'uppercase' }}>
-                Polla Mundialista
+                LaCabala.app
               </span>
               <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600, fontSize: '0.65rem', letterSpacing: '0.2em', color: '#F5A623', textTransform: 'uppercase' }}>
               🇺🇸 🇨🇦 🇲🇽 Copa del Mundo 2026
