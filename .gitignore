@@ -1,0 +1,79 @@
+# =============================================================================
+# Polla Mundialista — .gitignore
+# =============================================================================
+
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build outputs ─────────────────────────────────────────────────────────────
+dist/
+build/
+**/dist/
+**/build/
+
+# ── Environment & secrets — NEVER COMMIT ──────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+.env.test
+*.env
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── IDE & editors ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# ── TypeScript ────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ── Prisma ────────────────────────────────────────────────────────────────────
+# Keep migrations tracked but exclude the lock file
+prisma/migrations/**/migration_lock.toml
+# Prisma generated client (regenerated on postinstall)
+**/node_modules/.prisma/
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# Keep docker-compose.yml tracked; ignore local overrides
+docker-compose.override.yml
+# Local Docker volumes / DB data
+postgres-data/
+pgdata/
+.docker/
+
+# ── Test coverage ─────────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Copilot / AI agents (local session state, not project code) ───────────────
+.agents/
+skills-lock.json
+
+# ── Certificates & keys ───────────────────────────────────────────────────────
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx

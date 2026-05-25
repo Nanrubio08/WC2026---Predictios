@@ -1,0 +1,12 @@
+node_modules/
+.git/
+.gitignore
+.env
+.env.*
+frontend/node_modules/
+auth-service/node_modules/
+matches-service/node_modules/
+predictions-service/node_modules/
+**/dist/
+**/build/
+coverage/

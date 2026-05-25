@@ -1,0 +1,30 @@
+generator client {
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MatchStatus {
+  scheduled
+  live
+  finished
+}
+
+model Match {
+  id               Int         @id
+  homeTeam         String      @map("home_team")
+  awayTeam         String      @map("away_team")
+  homeLogoUrl      String?     @map("home_logo_url")
+  awayLogoUrl      String?     @map("away_logo_url")
+  kickoffTime      DateTime    @map("kickoff_time")
+  homeScoreActual  Int?        @map("home_score_actual")
+  awayScoreActual  Int?        @map("away_score_actual")
+  status           MatchStatus @default(scheduled)
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  @@map("matches")
+}

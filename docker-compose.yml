@@ -1,0 +1,77 @@
+networks:
+  worldcup-net:
+    driver: bridge
+
+services:
+  # ─── Backend Services ──────────────────────────────────────────────────────────
+
+  worldcup-auth-service:
+    build:
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    container_name: worldcup-auth-service
+    env_file: .env
+    environment:
+      DATABASE_URL: ${AUTH_DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${AUTH_SERVICE_PORT}
+      PREDICTIONS_SERVICE_URL: ${PREDICTIONS_SERVICE_URL}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+    ports:
+      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
+    networks:
+      - worldcup-net
+
+  worldcup-matches-service:
+    build:
+      context: ./backend/matches-service
+      dockerfile: Dockerfile
+    container_name: worldcup-matches-service
+    env_file: .env
+    environment:
+      DATABASE_URL: ${MATCHES_DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${MATCHES_SERVICE_PORT}
+      PREDICTIONS_SERVICE_URL: ${PREDICTIONS_SERVICE_URL}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+      FOOTBALL_DATA_API_KEY: ${FOOTBALL_DATA_API_KEY}
+      FOOTBALL_COMPETITION: ${FOOTBALL_COMPETITION:-WC}
+      FOOTBALL_SEASON: ${FOOTBALL_SEASON:-2026}
+    ports:
+      - "${MATCHES_SERVICE_PORT}:${MATCHES_SERVICE_PORT}"
+    networks:
+      - worldcup-net
+
+  worldcup-predictions-service:
+    build:
+      context: ./backend/predictions-service
+      dockerfile: Dockerfile
+    container_name: worldcup-predictions-service
+    env_file: .env
+    environment:
+      DATABASE_URL: ${PREDICTIONS_DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${PREDICTIONS_SERVICE_PORT}
+      MATCHES_SERVICE_URL: ${MATCHES_SERVICE_URL}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+    ports:
+      - "${PREDICTIONS_SERVICE_PORT}:${PREDICTIONS_SERVICE_PORT}"
+    networks:
+      - worldcup-net
+
+  # ─── Frontend ──────────────────────────────────────────────────────────────────
+
+  worldcup-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: worldcup-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - worldcup-auth-service
+      - worldcup-matches-service
+      - worldcup-predictions-service
+    networks:
+      - worldcup-net

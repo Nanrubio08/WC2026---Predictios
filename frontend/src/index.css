@@ -1,0 +1,235 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply min-h-screen bg-wc-bg text-wc-text;
+    font-family: 'Barlow', system-ui, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-bold text-wc-bg transition-all duration-200;
+    background: linear-gradient(135deg, #F5A623 0%, #E8920F 100%);
+    box-shadow: 0 2px 12px rgba(245, 166, 35, 0.3);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(245, 166, 35, 0.5);
+    background: linear-gradient(135deg, #FFD166 0%, #F5A623 100%);
+  }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { @apply opacity-50 cursor-not-allowed; transform: none; }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium text-wc-muted transition-all duration-150;
+  }
+  .btn-ghost:hover {
+    @apply text-wc-text;
+    background: rgba(21, 33, 54, 0.8);
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center rounded-lg border px-4 py-2 font-semibold text-wc-text transition-all duration-200;
+    border-color: rgba(245, 166, 35, 0.3);
+    background: rgba(245, 166, 35, 0.05);
+  }
+  .btn-outline:hover {
+    border-color: rgba(245, 166, 35, 0.6);
+    background: rgba(245, 166, 35, 0.1);
+  }
+
+  /* ── Cards ── */
+  .card {
+    @apply rounded-2xl border bg-wc-surface;
+    border-color: #152136;
+    padding: 1rem;
+  }
+
+  .card-pitch {
+    @apply rounded-2xl border bg-wc-surface;
+    border-color: #1A2E1A;
+    padding: 1rem;
+    background-image: repeating-linear-gradient(
+      180deg,
+      transparent,
+      transparent 28px,
+      rgba(0, 200, 122, 0.025) 28px,
+      rgba(0, 200, 122, 0.025) 56px
+    );
+  }
+
+  .card-gold {
+    @apply rounded-2xl border bg-wc-surface;
+    border-color: rgba(245, 166, 35, 0.25);
+    padding: 1rem;
+    background: linear-gradient(135deg, #0D1829 0%, #080F1C 100%);
+    box-shadow: inset 0 0 40px rgba(245, 166, 35, 0.03);
+  }
+
+  /* ── Form inputs ── */
+  .input {
+    @apply w-full rounded-lg px-3 py-2 text-wc-text placeholder-wc-dim transition-all;
+    background: #04070E;
+    border: 1px solid #152136;
+    font-family: 'Barlow', sans-serif;
+  }
+  .input:focus {
+    outline: none;
+    border-color: #F5A623;
+    box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
+  }
+
+  /* ── Dividers ── */
+  .grass-divider {
+    height: 3px;
+    border-radius: 99px;
+    background: linear-gradient(90deg, transparent, #00C87A 20%, #009960 50%, #00C87A 80%, transparent);
+    opacity: 0.7;
+  }
+
+  .gold-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #F5A623 30%, #FFD166 50%, #F5A623 70%, transparent);
+    opacity: 0.4;
+  }
+
+  /* ── Match card ── */
+  .match-card {
+    @apply rounded-2xl border bg-wc-surface overflow-hidden transition-all duration-300 cursor-default;
+    border-color: #152136;
+  }
+  .match-card:hover {
+    border-color: rgba(245, 166, 35, 0.3);
+    box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.1),
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(245, 166, 35, 0.06);
+    transform: translateY(-2px);
+  }
+
+  /* ── Pitch background ── */
+  .pitch-bg {
+    position: relative;
+    overflow: hidden;
+  }
+  .pitch-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      180deg,
+      transparent,
+      transparent 60px,
+      rgba(0, 200, 122, 0.03) 60px,
+      rgba(0, 200, 122, 0.03) 120px
+    );
+    pointer-events: none;
+  }
+}
+
+@layer utilities {
+  /* ── Text effects ── */
+  .text-gold-shimmer {
+    background: linear-gradient(90deg, #F5A623 0%, #FFD166 40%, #F5A623 60%, #E8920F 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+  }
+
+  .text-shadow-gold {
+    text-shadow: 0 0 40px rgba(245, 166, 35, 0.6), 0 0 80px rgba(245, 166, 35, 0.3);
+  }
+
+  .text-shadow-glow {
+    text-shadow: 0 0 40px rgba(0, 200, 122, 0.5);
+  }
+
+  /* ── Gradient overlays ── */
+  .hero-gradient {
+    background: linear-gradient(
+      to bottom,
+      rgba(4, 7, 14, 0.15) 0%,
+      rgba(4, 7, 14, 0.45) 35%,
+      rgba(4, 7, 14, 0.92) 100%
+    );
+  }
+
+  .hero-radial {
+    background: radial-gradient(
+      ellipse 80% 60% at 50% 0%,
+      rgba(245, 166, 35, 0.08) 0%,
+      transparent 60%
+    );
+  }
+
+  /* ── Gold glow box ── */
+  .gold-glow {
+    box-shadow: 0 0 30px rgba(245, 166, 35, 0.2), 0 0 60px rgba(245, 166, 35, 0.08);
+  }
+
+  /* ── Noise grain overlay ── */
+  .noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.3;
+  }
+}
+
+/* ── Animations ── */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-fade-in {
+  animation: fadeIn 0.6s ease forwards;
+}
+
+.delay-100 { animation-delay: 0.1s; opacity: 0; }
+.delay-200 { animation-delay: 0.2s; opacity: 0; }
+.delay-300 { animation-delay: 0.3s; opacity: 0; }
+.delay-400 { animation-delay: 0.4s; opacity: 0; }
+.delay-500 { animation-delay: 0.5s; opacity: 0; }
+.delay-600 { animation-delay: 0.6s; opacity: 0; }
+.delay-700 { animation-delay: 0.7s; opacity: 0; }
+
+/* ── Ticker tape ── */
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-track {
+  animation: ticker 40s linear infinite;
+  white-space: nowrap;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #04070E; }
+::-webkit-scrollbar-thumb { background: #152136; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #F5A623; }

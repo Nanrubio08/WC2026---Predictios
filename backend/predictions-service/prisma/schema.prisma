@@ -1,0 +1,30 @@
+generator client {
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Prediction {
+  id                   String   @id @default(uuid())
+  userId               String   @map("user_id")
+  matchId              Int      @map("match_id")
+  homeScorePredicted   Int      @map("home_score_predicted")
+  awayScorePredicted   Int      @map("away_score_predicted")
+  pointsEarned         Int      @default(0) @map("points_earned")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, matchId])
+  @@map("predictions")
+}
+
+model Leaderboard {
+  id          String @id @default(uuid())
+  userId      String @unique @map("user_id")
+  totalPoints Int    @default(0) @map("total_points")
+
+  @@map("leaderboard")
+}

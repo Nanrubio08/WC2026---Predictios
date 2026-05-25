@@ -1,0 +1,26 @@
+{
+  "name": "proyectopmundial",
+  "private": true,
+  "version": "1.0.0",
+  "description": "World Cup prediction full-stack monorepo",
+  "license": "ISC",
+  "author": "Devnan",
+  "workspaces": [
+    "backend/auth-service",
+    "backend/matches-service",
+    "backend/predictions-service",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:auth": "npm --workspace auth-service run dev",
+    "dev:matches": "npm --workspace matches-service run dev",
+    "dev:predictions": "npm --workspace predictions-service run dev",
+    "dev:frontend": "npm --workspace frontend run dev",
+    "dev": "concurrently \"npm run dev:auth\" \"npm run dev:matches\" \"npm run dev:predictions\" \"npm run dev:frontend\"",
+    "build": "npm --workspace auth-service run build && npm --workspace matches-service run build && npm --workspace predictions-service run build && npm --workspace frontend run build",
+    "lint": "npm --workspace auth-service run lint && npm --workspace matches-service run lint && npm --workspace predictions-service run lint && npm --workspace frontend run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
