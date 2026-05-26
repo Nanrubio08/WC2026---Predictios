@@ -9,14 +9,31 @@ if (!INTERNAL_TOKEN) {
 
 export interface MatchInfo {
   id: number;
+  homeTeam: string;
+  awayTeam: string;
+  homeLogoUrl: string | null;
+  awayLogoUrl: string | null;
   kickoffTime: string;
+  homeScoreActual: number | null;
+  awayScoreActual: number | null;
   status: string;
+  stage: string | null;
+  group: string | null;
+  matchday: number | null;
 }
 
 export async function getMatch(matchId: number): Promise<MatchInfo> {
   const res = await axios.get<MatchInfo>(`${MATCHES_URL}/internal/matches/${matchId}`, {
     headers: { 'x-internal-token': INTERNAL_TOKEN ?? '' },
     timeout: 5000,
+  });
+  return res.data;
+}
+
+export async function getAllMatches(): Promise<MatchInfo[]> {
+  const res = await axios.get<MatchInfo[]>(`${MATCHES_URL}/internal/matches`, {
+    headers: { 'x-internal-token': INTERNAL_TOKEN ?? '' },
+    timeout: 10000,
   });
   return res.data;
 }

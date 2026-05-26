@@ -1,8 +1,21 @@
 import { Router } from 'express';
 import { requireInternalToken } from '../middleware/requireInternalToken';
 import { getMatchByIdController } from '../controllers/getMatchByIdController';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const router = Router();
+
+router.get('/', requireInternalToken, async (_req, res) => {
+  try {
+    const matches = await prisma.match.findMany({ orderBy: { kickoffTime: 'asc' } });
+    res.json(matches);
+  } catch (err) {
+    console.error('internal listMatches error', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 router.get('/:id', requireInternalToken, (req, res) => {
   getMatchByIdController(req, res).catch((err) => {

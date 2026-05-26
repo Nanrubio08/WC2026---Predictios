@@ -1,7 +1,8 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { triggerScoring } from '../clients/scoringClient';
+import { AdminRequest } from '../middleware/requireAdmin';
 
 const prisma = new PrismaClient();
 
@@ -10,7 +11,7 @@ const UpdateScoreSchema = z.object({
   awayScoreActual: z.number().int().min(0).max(99),
 });
 
-export async function updateMatchScoreController(req: Request, res: Response): Promise<void> {
+export async function updateMatchScoreController(req: AdminRequest, res: Response): Promise<void> {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) {
     res.status(400).json({ error: 'Invalid match id' });
@@ -31,14 +32,22 @@ export async function updateMatchScoreController(req: Request, res: Response): P
     return;
   }
 
-  if (match.status === 'finished') {
-    res.status(409).json({ error: 'Match already finished' });
-    return;
-  }
-
   const updated = await prisma.match.update({
     where: { id },
     data: { homeScoreActual, awayScoreActual, status: 'finished' },
+  });
+
+  // Write audit log
+  await prisma.adminAuditLog.create({
+    data: {
+      adminUserId: req.adminUserId ?? 'unknown',
+      matchId: id,
+      action: 'UPDATE_SCORE',
+      previousHome: match.homeScoreActual,
+      previousAway: match.awayScoreActual,
+      newHome: homeScoreActual,
+      newAway: awayScoreActual,
+    },
   });
 
   try {

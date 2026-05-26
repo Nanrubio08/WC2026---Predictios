@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Match } from '../types';
 import PredictionForm from './PredictionForm';
 
@@ -44,6 +44,58 @@ function TeamLogo({ src, alt }: { src: string | null; alt: string }) {
     );
   }
   return <img src={src} alt={alt} className="h-10 w-10 object-contain" onError={() => setFailed(true)} />;
+}
+
+const LOCK_MINUTES = 30;
+
+function useCountdown(kickoffTime: string) {
+  const lockMs = new Date(kickoffTime).getTime() - LOCK_MINUTES * 60 * 1000;
+
+  const getRemaining = () => {
+    const diff = lockMs - Date.now();
+    return diff > 0 ? diff : 0;
+  };
+
+  const [remaining, setRemaining] = useState(getRemaining);
+
+  useEffect(() => {
+    if (remaining <= 0) return;
+    const timer = setInterval(() => {
+      const r = getRemaining();
+      setRemaining(r);
+      if (r <= 0) clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [kickoffTime]);
+
+  return remaining;
+}
+
+function CountdownTimer({ kickoffTime }: { kickoffTime: string }) {
+  const remaining = useCountdown(kickoffTime);
+
+  if (remaining <= 0) return null;
+
+  const totalSeconds = Math.floor(remaining / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const isUrgent = remaining < 30 * 60 * 1000; // less than 30min
+  const color = isUrgent ? '#F03E3E' : '#F5A623';
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const display = hours > 0
+    ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+    : `${pad(minutes)}:${pad(seconds)}`;
+
+  return (
+    <div className="mt-3 flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs"
+      style={{ background: isUrgent ? 'rgba(240,62,62,0.08)' : 'rgba(245,166,35,0.06)', border: `1px solid ${isUrgent ? 'rgba(240,62,62,0.2)' : 'rgba(245,166,35,0.15)'}`, color, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
+      <span>⏱</span>
+      <span className="font-bold">CIERRE EN {display}</span>
+    </div>
+  );
 }
 
 export default function MatchCard({ match, isAuthenticated }: Props) {
@@ -118,6 +170,11 @@ export default function MatchCard({ match, isAuthenticated }: Props) {
             </span>
           </div>
         </div>
+
+        {/* Countdown to lock */}
+        {match.status === 'scheduled' && (
+          <CountdownTimer kickoffTime={match.kickoffTime} />
+        )}
 
         {/* User's prediction */}
         {match.userPrediction && (

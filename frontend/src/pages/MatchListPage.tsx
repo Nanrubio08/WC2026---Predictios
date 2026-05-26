@@ -8,6 +8,7 @@ interface Props {
 }
 
 type StatusFilter = 'all' | 'scheduled' | 'live' | 'finished';
+type StageFilter = 'all' | 'GROUP_STAGE' | 'ROUND_OF_16' | 'QUARTER_FINALS' | 'SEMI_FINALS' | 'FINAL';
 type TeamFilter = string | null;
 
 // Day 1 = June 11 2026. Uses local date so matches group by the viewer's timezone day.
@@ -17,6 +18,15 @@ function getMatchDay(kickoffTime: string): number {
   const tournamentLocalMidnight = new Date(2026, 5, 11).getTime(); // June 11 2026 local midnight
   return Math.floor((matchLocalMidnight - tournamentLocalMidnight) / 86_400_000) + 1;
 }
+
+const STAGE_LABELS: Record<StageFilter, string> = {
+  all: 'Todos',
+  GROUP_STAGE: 'Fase de Grupos',
+  ROUND_OF_16: 'Octavos',
+  QUARTER_FINALS: 'Cuartos',
+  SEMI_FINALS: 'Semis',
+  FINAL: 'Final',
+};
 
 function MatchSkeleton() {
   return (
@@ -48,6 +58,7 @@ export default function MatchListPage({ isAuthenticated }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [stageFilter, setStageFilter] = useState<StageFilter>('all');
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<TeamFilter>(null);
 
@@ -61,11 +72,19 @@ export default function MatchListPage({ isAuthenticated }: Props) {
       .finally(() => setLoading(false));
   }, [isAuthenticated]);
 
+  // Available stages that have at least one match
+  const availableStages = useMemo(() => {
+    const stages = new Set(matches.map((m) => m.stage).filter(Boolean));
+    const order: StageFilter[] = ['GROUP_STAGE', 'ROUND_OF_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'FINAL'];
+    return order.filter((s) => stages.has(s));
+  }, [matches]);
+
   // Sorted list of unique days that actually have matches
   const availableDays = useMemo(() => {
-    const days = new Set(matches.map((m) => getMatchDay(m.kickoffTime)));
+    const filtered = stageFilter === 'all' ? matches : matches.filter((m) => m.stage === stageFilter);
+    const days = new Set(filtered.map((m) => getMatchDay(m.kickoffTime)));
     return Array.from(days).sort((a, b) => a - b);
-  }, [matches]);
+  }, [matches, stageFilter]);
 
   // Sorted unique team list derived from matches
   const availableTeams = useMemo(() => {
@@ -78,11 +97,12 @@ export default function MatchListPage({ isAuthenticated }: Props) {
   const filtered = useMemo(() => {
     return matches.filter((m) => {
       const statusOk = statusFilter === 'all' || m.status === statusFilter;
+      const stageOk = stageFilter === 'all' || m.stage === stageFilter;
       const dayOk = selectedDay === null || getMatchDay(m.kickoffTime) === selectedDay;
       const teamOk = selectedTeam === null || m.homeTeam === selectedTeam || m.awayTeam === selectedTeam;
-      return statusOk && dayOk && teamOk;
+      return statusOk && stageOk && dayOk && teamOk;
     });
-  }, [matches, statusFilter, selectedDay, selectedTeam]);
+  }, [matches, statusFilter, stageFilter, selectedDay, selectedTeam]);
 
   const statusFilters: { key: StatusFilter; label: string }[] = [
     { key: 'all', label: `Todos` },
@@ -92,6 +112,23 @@ export default function MatchListPage({ isAuthenticated }: Props) {
   ];
 
   const pillBase = 'shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition-all';
+
+  const activePill = {
+    background: 'linear-gradient(135deg, #F5A623 0%, #E8920F 100%)',
+    color: '#04070E',
+    fontFamily: 'Barlow Condensed, sans-serif',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const,
+    boxShadow: '0 2px 12px rgba(245,166,35,0.3)',
+  };
+  const inactivePill = {
+    background: 'rgba(21,33,54,0.6)',
+    border: '1px solid #152136',
+    color: '#5B6E8C',
+    fontFamily: 'Barlow Condensed, sans-serif',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const,
+  };
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -109,6 +146,22 @@ export default function MatchListPage({ isAuthenticated }: Props) {
 
       {!loading && !error && (
         <div className="mb-5 space-y-3">
+          {/* Stage filter */}
+          {availableStages.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              <button key="all" onClick={() => { setStageFilter('all'); setSelectedDay(null); }} className={pillBase}
+                style={stageFilter === 'all' ? activePill : inactivePill}>
+                Todos
+              </button>
+              {availableStages.map((s) => (
+                <button key={s} onClick={() => { setStageFilter(s); setSelectedDay(null); }} className={pillBase}
+                  style={stageFilter === s ? activePill : inactivePill}>
+                  {STAGE_LABELS[s]}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Status filter */}
           <div className="flex gap-2 overflow-x-auto pb-1">
             {statusFilters.map(({ key, label }) => (
@@ -116,21 +169,7 @@ export default function MatchListPage({ isAuthenticated }: Props) {
                 key={key}
                 onClick={() => setStatusFilter(key)}
                 className={pillBase}
-                style={statusFilter === key ? {
-                  background: 'linear-gradient(135deg, #F5A623 0%, #E8920F 100%)',
-                  color: '#04070E',
-                  fontFamily: 'Barlow Condensed, sans-serif',
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  boxShadow: '0 2px 12px rgba(245,166,35,0.3)',
-                } : {
-                  background: 'rgba(21,33,54,0.6)',
-                  border: '1px solid #152136',
-                  color: '#5B6E8C',
-                  fontFamily: 'Barlow Condensed, sans-serif',
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                }}
+                style={statusFilter === key ? activePill : inactivePill}
               >
                 {label}
               </button>

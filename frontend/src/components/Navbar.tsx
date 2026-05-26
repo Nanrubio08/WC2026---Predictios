@@ -75,10 +75,14 @@ export default function Navbar({ isAuthenticated, user, onLogin, onLogout }: Pro
             </span>
           </Link>
 
-          <nav className="ml-2 flex items-center gap-5">
+          <nav className="ml-2 flex items-center gap-5 overflow-x-auto">
             {navLink('/', 'Home')}
             {navLink('/matches', 'Partidos')}
+            {navLink('/groups', 'Grupos')}
             {navLink('/leaderboard', 'Posiciones')}
+            {isAuthenticated && navLink('/bonus', '🏆 Bonus')}
+            {isAuthenticated && navLink('/my-predictions', 'Mis Pronós.')}
+            {user?.role === 'admin' && navLink('/admin', '⚙ Admin')}
           </nav>
 
           <div className="ml-auto flex items-center gap-3">

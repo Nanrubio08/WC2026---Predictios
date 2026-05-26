@@ -8,6 +8,9 @@ export interface Match {
   homeScoreActual: number | null;
   awayScoreActual: number | null;
   status: 'scheduled' | 'live' | 'finished';
+  stage: string | null;
+  group: string | null;
+  matchday: number | null;
   userPrediction?: { homeScorePredicted: number; awayScorePredicted: number } | null;
 }
 
@@ -28,3 +31,41 @@ export interface User {
   favoriteTeam?: string;
   avatarUrl?: string | null;
 }
+
+export interface MyPrediction {
+  matchId: number;
+  homeScorePredicted: number;
+  awayScorePredicted: number;
+  pointsEarned: number;
+  match: {
+    homeTeam: string;
+    awayTeam: string;
+    homeLogoUrl: string | null;
+    awayLogoUrl: string | null;
+    kickoffTime: string;
+    homeScoreActual: number | null;
+    awayScoreActual: number | null;
+    status: string;
+    stage: string | null;
+    group: string | null;
+  } | null;
+}
+
+export interface BonusAnswer {
+  question: string;
+  answer: string | null;
+  points: number;
+}
+
+export interface AuditLog {
+  id: string;
+  adminUserId: string;
+  matchId: number;
+  action: string;
+  previousHome: number | null;
+  previousAway: number | null;
+  newHome: number;
+  newAway: number;
+  createdAt: string;
+}
+

@@ -28,3 +28,14 @@ model Leaderboard {
 
   @@map("leaderboard")
 }
+
+model BonusAnswer {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  answer    String
+  points    Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("bonus_answers")
+}

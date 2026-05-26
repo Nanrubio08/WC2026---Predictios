@@ -46,5 +46,8 @@ function buildMatchData(match: FDMatch) {
     status: mapStatus(match.status),
     homeScoreActual: match.score.fullTime.home,
     awayScoreActual: match.score.fullTime.away,
+    stage: match.stage ?? null,
+    group: match.group ?? null,
+    matchday: match.matchday ?? null,
   };
 }

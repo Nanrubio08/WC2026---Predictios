@@ -24,7 +24,24 @@ model Match {
   homeScoreActual  Int?        @map("home_score_actual")
   awayScoreActual  Int?        @map("away_score_actual")
   status           MatchStatus @default(scheduled)
+  stage            String?
+  group            String?
+  matchday         Int?
   updatedAt        DateTime    @updatedAt @map("updated_at")
 
   @@map("matches")
+}
+
+model AdminAuditLog {
+  id            String   @id @default(uuid())
+  adminUserId   String   @map("admin_user_id")
+  matchId       Int      @map("match_id")
+  action        String
+  previousHome  Int?     @map("previous_home")
+  previousAway  Int?     @map("previous_away")
+  newHome       Int      @map("new_home")
+  newAway       Int      @map("new_away")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("admin_audit_log")
 }

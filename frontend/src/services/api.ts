@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Match, LeaderboardEntry, User } from '../types';
+import type { Match, LeaderboardEntry, User, MyPrediction, BonusAnswer, AuditLog } from '../types';
 
 const api = axios.create({ baseURL: '', withCredentials: true });
 
@@ -85,4 +85,41 @@ export async function changePassword(data: {
 export async function uploadAvatar(avatar: string): Promise<{ avatarUrl: string }> {
   const res = await api.put<{ avatarUrl: string }>('/api/auth/profile/avatar', { avatar });
   return res.data;
+}
+
+// My Predictions
+export async function fetchMyPredictions(): Promise<MyPrediction[]> {
+  const res = await api.get<MyPrediction[]>('/api/predictions/my');
+  return res.data;
+}
+
+// Bonus / Golden Ball
+export async function fetchMyBonusAnswer(): Promise<BonusAnswer> {
+  const res = await api.get<BonusAnswer>('/api/bonus/answer');
+  return res.data;
+}
+
+export async function submitBonusAnswer(answer: string): Promise<BonusAnswer> {
+  const res = await api.post<BonusAnswer>('/api/bonus/answer', { answer });
+  return res.data;
+}
+
+// Admin
+export async function adminFetchMatches(): Promise<Match[]> {
+  const res = await api.get<Match[]>('/api/admin/matches');
+  return res.data;
+}
+
+export async function adminUpdateScore(matchId: number, homeScoreActual: number, awayScoreActual: number): Promise<Match> {
+  const res = await api.post<Match>(`/api/admin/matches/${matchId}/score`, { homeScoreActual, awayScoreActual });
+  return res.data;
+}
+
+export async function adminFetchAuditLogs(): Promise<AuditLog[]> {
+  const res = await api.get<AuditLog[]>('/api/admin/matches/audit');
+  return res.data;
+}
+
+export function adminLeaderboardExportUrl(): string {
+  return '/api/admin/leaderboard/export';
 }

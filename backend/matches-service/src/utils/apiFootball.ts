@@ -19,6 +19,9 @@ export interface FDMatch {
   id: number;
   utcDate: string;
   status: string;
+  stage: string;
+  group: string | null;
+  matchday: number | null;
   homeTeam: {
     id: number;
     name: string;
