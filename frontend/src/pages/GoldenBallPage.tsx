@@ -34,9 +34,12 @@ export default function GoldenBallPage() {
       .finally(() => setLoading(false));
   }, [isAuthenticated, navigate]);
 
+  const winnerDeclared = !!bonus?.tournamentWinner;
+  const userWon = winnerDeclared && bonus?.answer === bonus?.tournamentWinner;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected) return;
+    if (!selected || winnerDeclared) return;
     setSaving(true);
     setError(null);
     setSaved(false);
@@ -75,10 +78,33 @@ export default function GoldenBallPage() {
             <h2 className="text-xl font-black text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
               ¿Quién ganará el Mundial 2026?
             </h2>
-            <p className="text-wc-muted text-xs mt-1">Podés cambiar tu respuesta hasta que comience el torneo</p>
+            {!winnerDeclared && (
+              <p className="text-wc-muted text-xs mt-1">Podés cambiar tu respuesta hasta que se declare el ganador</p>
+            )}
           </div>
 
-          {bonus?.answer && (
+          {/* Tournament winner declared banner */}
+          {winnerDeclared && (
+            <div className="rounded-lg px-4 py-4 text-center"
+              style={{ background: userWon ? 'rgba(245,166,35,0.12)' : 'rgba(0,200,122,0.07)', border: `1px solid ${userWon ? 'rgba(245,166,35,0.4)' : 'rgba(0,200,122,0.2)'}` }}>
+              <p className="text-xs text-wc-muted mb-1 uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>
+                🌍 Campeón del Mundial 2026
+              </p>
+              <p className="text-2xl font-black" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F5A623', letterSpacing: '0.05em' }}>
+                {bonus.tournamentWinner}
+              </p>
+              {userWon ? (
+                <p className="text-sm mt-2 font-bold" style={{ color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  🎉 ¡Acertaste! Ganaste <span className="text-lg">+30 pts</span> bonus
+                </p>
+              ) : (
+                <p className="text-xs mt-2 text-wc-muted">Tu elección fue: <strong className="text-wc-text">{bonus.answer ?? '(sin elección)'}</strong></p>
+              )}
+            </div>
+          )}
+
+          {/* User's current pick */}
+          {bonus?.answer && !winnerDeclared && (
             <div className="rounded-lg px-4 py-3 text-center"
               style={{ background: 'rgba(0,200,122,0.07)', border: '1px solid rgba(0,200,122,0.2)' }}>
               <p className="text-xs text-wc-muted mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>TU ELECCIÓN ACTUAL</p>
@@ -89,36 +115,48 @@ export default function GoldenBallPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-wc-muted mb-2"
-                style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                Seleccioná un equipo
-              </label>
-              <select
-                value={selected}
-                onChange={(e) => setSelected(e.target.value)}
-                className="w-full rounded-lg px-3 py-2.5 text-sm font-semibold text-wc-text focus:outline-none"
-                style={{ background: '#0D1829', border: `1px solid ${selected ? 'rgba(245,166,35,0.3)' : '#152136'}`, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}
+          {!winnerDeclared && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-wc-muted mb-2"
+                  style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  Seleccioná un equipo
+                </label>
+                <select
+                  value={selected}
+                  onChange={(e) => setSelected(e.target.value)}
+                  className="w-full rounded-lg px-3 py-2.5 text-sm font-semibold text-wc-text focus:outline-none"
+                  style={{ background: '#0D1829', border: `1px solid ${selected ? 'rgba(245,166,35,0.3)' : '#152136'}`, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}
+                >
+                  <option value="">— Elegí un equipo —</option>
+                  {WC_TEAMS.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+              {saved && <p className="text-xs text-center" style={{ color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>✓ Respuesta guardada correctamente</p>}
+
+              <button
+                type="submit"
+                disabled={!selected || saving}
+                className="btn-primary w-full"
               >
-                <option value="">— Elegí un equipo —</option>
-                {WC_TEAMS.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+                {saving ? 'Guardando…' : bonus?.answer ? 'Actualizar elección' : 'Confirmar elección'}
+              </button>
+            </form>
+          )}
+
+          {/* Points summary if earned */}
+          {bonus && bonus.points > 0 && (
+            <div className="text-center pt-2">
+              <span className="text-xs px-3 py-1.5 rounded-full font-bold"
+                style={{ background: 'rgba(245,166,35,0.15)', color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>
+                +{bonus.points} PTS BONUS EN TU CUENTA
+              </span>
             </div>
-
-            {error && <p className="text-xs text-red-400 text-center">{error}</p>}
-            {saved && <p className="text-xs text-center" style={{ color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>✓ Respuesta guardada correctamente</p>}
-
-            <button
-              type="submit"
-              disabled={!selected || saving}
-              className="btn-primary w-full"
-            >
-              {saving ? 'Guardando…' : bonus?.answer ? 'Actualizar elección' : 'Confirmar elección'}
-            </button>
-          </form>
+          )}
         </div>
       )}
     </div>

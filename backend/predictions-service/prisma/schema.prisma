@@ -39,3 +39,12 @@ model BonusAnswer {
 
   @@map("bonus_answers")
 }
+
+model BonusConfig {
+  id          String    @id @default("singleton")
+  winner      String?
+  declaredAt  DateTime? @map("declared_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("bonus_config")
+}

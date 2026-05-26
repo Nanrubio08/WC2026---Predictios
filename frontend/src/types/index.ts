@@ -55,6 +55,7 @@ export interface BonusAnswer {
   question: string;
   answer: string | null;
   points: number;
+  tournamentWinner: string | null;
 }
 
 export interface AuditLog {

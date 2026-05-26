@@ -123,3 +123,13 @@ export async function adminFetchAuditLogs(): Promise<AuditLog[]> {
 export function adminLeaderboardExportUrl(): string {
   return '/api/admin/leaderboard/export';
 }
+
+export async function adminGetBonusConfig(): Promise<{ winner: string | null; declaredAt: string | null }> {
+  const res = await api.get('/api/admin/bonus/config');
+  return res.data;
+}
+
+export async function adminDeclareWinner(winner: string): Promise<{ winner: string; scored: number; message: string }> {
+  const res = await api.post('/api/admin/bonus/winner', { winner });
+  return res.data;
+}

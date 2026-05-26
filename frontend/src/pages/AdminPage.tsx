@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminLeaderboardExportUrl } from '../services/api';
+import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminLeaderboardExportUrl, adminGetBonusConfig, adminDeclareWinner } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { Match, AuditLog } from '../types';
+
+const WC_TEAMS = [
+  'Argentina', 'Brasil', 'Francia', 'Inglaterra', 'España', 'Alemania',
+  'Portugal', 'Países Bajos', 'Bélgica', 'Uruguay', 'Colombia', 'Mexico',
+  'Estados Unidos', 'Canadá', 'Marruecos', 'Senegal', 'Nigeria', 'Ghana',
+  'Japón', 'Corea del Sur', 'Australia', 'Arabia Saudita', 'Irán', 'Qatar',
+  'Polonia', 'Croacia', 'Serbia', 'Dinamarca', 'Suiza', 'Austria',
+  'Ecuador', 'Perú', 'Chile', 'Venezuela', 'Bolivia', 'Paraguay',
+  'Costa Rica', 'Honduras', 'Panamá', 'Jamaica', 'Argelia', 'Egipto',
+  'Camerún', 'Costa de Marfil', 'Túnez', 'Sudáfrica', 'China', 'Indonesia',
+].sort();
 
 function ScoreEditor({ match, onUpdated }: { match: Match; onUpdated: (m: Match) => void }) {
   const [home, setHome] = useState(String(match.homeScoreActual ?? ''));
@@ -61,13 +72,95 @@ function ScoreEditor({ match, onUpdated }: { match: Match; onUpdated: (m: Match)
   );
 }
 
+function GoldenBallAdmin() {
+  const [currentWinner, setCurrentWinner] = useState<string | null>(null);
+  const [selected, setSelected] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    adminGetBonusConfig()
+      .then((c) => { setCurrentWinner(c.winner); setSelected(c.winner ?? ''); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleDeclare(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selected) return;
+    const confirmed = window.confirm(`¿Declarar a "${selected}" como campeón? Esto otorgará 30 pts a todos los usuarios que lo eligieron. Esta acción es permanente.`);
+    if (!confirmed) return;
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await adminDeclareWinner(selected);
+      setCurrentWinner(res.winner);
+      setMessage(res.message);
+    } catch (err: any) {
+      setError(err?.response?.data?.error ?? 'Error al declarar ganador.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) return <div className="animate-pulse h-24 rounded-xl" style={{ background: 'rgba(21,33,54,0.6)' }} />;
+
+  return (
+    <div className="card p-5 space-y-4">
+      <div className="flex items-center gap-3">
+        <span className="text-2xl">🏆</span>
+        <div>
+          <h3 className="font-black text-wc-text uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>Balón de Oro — Declarar Campeón</h3>
+          <p className="text-xs text-wc-muted">Otorga 30 pts a todos los usuarios que eligieron este equipo. Irreversible.</p>
+        </div>
+      </div>
+
+      {currentWinner && (
+        <div className="rounded-lg px-4 py-2 text-sm font-bold text-center"
+          style={{ background: 'rgba(245,166,35,0.12)', border: '1px solid rgba(245,166,35,0.3)', color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
+          🥇 Campeón declarado: {currentWinner}
+        </div>
+      )}
+
+      <form onSubmit={handleDeclare} className="flex gap-3 flex-wrap items-end">
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-xs font-bold text-wc-muted mb-1"
+            style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            Equipo campeón
+          </label>
+          <select
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+            className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-wc-text focus:outline-none"
+            style={{ background: '#0D1829', border: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif' }}
+          >
+            <option value="">— Seleccioná el campeón —</option>
+            {WC_TEAMS.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <button type="submit" disabled={!selected || saving}
+          className="rounded-lg px-5 py-2 text-sm font-black uppercase"
+          style={{ background: saving ? 'rgba(245,166,35,0.1)' : 'linear-gradient(135deg,#F5A623 0%,#E8920F 100%)', color: '#04070E', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', opacity: !selected || saving ? 0.6 : 1 }}>
+          {saving ? 'Procesando…' : 'Declarar Campeón'}
+        </button>
+      </form>
+
+      {message && <p className="text-xs text-center" style={{ color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>✓ {message}</p>}
+      {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { user, isAuthenticated } = useAuthToken();
   const navigate = useNavigate();
   const [matches, setMatches] = useState<Match[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'matches' | 'audit'>('matches');
+  const [tab, setTab] = useState<'matches' | 'audit' | 'bonus'>('matches');
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') { navigate('/'); return; }
@@ -98,6 +191,7 @@ export default function AdminPage() {
       <div className="mb-5 flex items-center gap-3 flex-wrap">
         <button className={pillBase} style={tab === 'matches' ? activeStyle : inactiveStyle} onClick={() => setTab('matches')}>Partidos</button>
         <button className={pillBase} style={tab === 'audit' ? activeStyle : inactiveStyle} onClick={() => setTab('audit')}>Audit Log</button>
+        <button className={pillBase} style={tab === 'bonus' ? activeStyle : inactiveStyle} onClick={() => setTab('bonus')}>🏆 Balón de Oro</button>
         <a
           href={adminLeaderboardExportUrl()}
           className={`${pillBase} no-underline`}
@@ -109,6 +203,8 @@ export default function AdminPage() {
       </div>
 
       {loading && <div className="space-y-3">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="card animate-pulse h-16" />)}</div>}
+
+      {!loading && tab === 'bonus' && <GoldenBallAdmin />}
 
       {!loading && tab === 'matches' && (
         <div className="card overflow-hidden">
@@ -193,3 +289,4 @@ export default function AdminPage() {
     </div>
   );
 }
+

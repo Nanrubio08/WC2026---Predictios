@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchMatches } from '../services/api';
+import { useAuthToken } from '../hooks/useAuthToken';
 import type { Match } from '../types';
 
 interface TeamStats {
@@ -14,12 +15,14 @@ interface TeamStats {
   points: number;
 }
 
+function isGroupStage(stage: string | null): boolean {
+  if (!stage) return false;
+  return stage === 'GROUP_STAGE' || stage.toUpperCase().includes('GROUP');
+}
+
 function calcGroupStandings(matches: Match[]): Record<string, TeamStats[]> {
   const groups: Record<string, Record<string, TeamStats>> = {};
-
-  const groupMatches = matches.filter(
-    (m) => m.stage === 'GROUP_STAGE' && m.group
-  );
+  const groupMatches = matches.filter((m) => isGroupStage(m.stage) && m.group);
 
   for (const m of groupMatches) {
     const g = m.group!;
@@ -34,13 +37,9 @@ function calcGroupStandings(matches: Match[]): Record<string, TeamStats[]> {
     if (m.status === 'finished' && m.homeScoreActual !== null && m.awayScoreActual !== null) {
       const hg = m.homeScoreActual;
       const ag = m.awayScoreActual;
-      home.played++;
-      away.played++;
-      home.goalsFor += hg;
-      home.goalsAgainst += ag;
-      away.goalsFor += ag;
-      away.goalsAgainst += hg;
-
+      home.played++; away.played++;
+      home.goalsFor += hg; home.goalsAgainst += ag;
+      away.goalsFor += ag; away.goalsAgainst += hg;
       if (hg > ag) { home.won++; home.points += 3; away.lost++; }
       else if (hg < ag) { away.won++; away.points += 3; home.lost++; }
       else { home.drawn++; home.points++; away.drawn++; away.points++; }
@@ -123,13 +122,34 @@ export default function GroupStandingsPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const { user } = useAuthToken();
+  const isAdmin = user?.role === 'admin';
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
     fetchMatches()
       .then(setMatches)
       .catch(() => setError('No se pudieron cargar los datos.'))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      await fetch('/api/admin/matches/sync', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      load();
+    } catch {
+      // ignore
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const standings = useMemo(() => calcGroupStandings(matches), [matches]);
   const sortedGroups = Object.keys(standings).sort();
@@ -159,23 +179,55 @@ export default function GroupStandingsPage() {
       {error && (
         <div className="py-16 text-center text-wc-muted">
           <p>{error}</p>
-          <button onClick={() => window.location.reload()} className="btn-primary mt-4">Reintentar</button>
+          <button onClick={load} className="btn-primary mt-4">Reintentar</button>
         </div>
       )}
 
       {!loading && !error && sortedGroups.length === 0 && (
-        <div className="py-16 text-center text-wc-muted"
-          style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.1rem' }}>
-          Los grupos aún no están disponibles. Volvé cuando comience la fase de grupos.
+        <div className="py-16 text-center space-y-4">
+          <div className="text-5xl">🗓️</div>
+          <p className="text-wc-muted text-lg" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
+            Los grupos aún no están disponibles.
+          </p>
+          <p className="text-wc-dim text-sm max-w-sm mx-auto">
+            Las posiciones se mostrarán aquí una vez que los fixtures de la fase de grupos sean sincronizados.
+          </p>
+          {isAdmin && (
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="btn-primary mt-2"
+              style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase' }}
+            >
+              {syncing ? 'Sincronizando…' : '⟳ Sincronizar Fixtures (Admin)'}
+            </button>
+          )}
+          {!isAdmin && (
+            <p className="text-wc-dim text-xs">Contactá al administrador para sincronizar los datos.</p>
+          )}
         </div>
       )}
 
       {!loading && !error && sortedGroups.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedGroups.map((g) => (
-            <GroupTable key={g} group={g} teams={standings[g]} />
-          ))}
-        </div>
+        <>
+          {isAdmin && (
+            <div className="mb-4 flex justify-end">
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                className="rounded-full px-4 py-1.5 text-xs font-bold uppercase"
+                style={{ background: 'rgba(0,200,122,0.1)', border: '1px solid rgba(0,200,122,0.25)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}
+              >
+                {syncing ? 'Sincronizando…' : '⟳ Re-sincronizar'}
+              </button>
+            </div>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {sortedGroups.map((g) => (
+              <GroupTable key={g} group={g} teams={standings[g]} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

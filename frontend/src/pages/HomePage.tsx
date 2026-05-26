@@ -219,7 +219,6 @@ export default function HomePage() {
       {/* ── How it works ── */}
       <section className="space-y-8 px-2 pt-16">
         <div className="text-center">
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-wc-green" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.2em' }}>Cómo funciona</p>
           <h2 className="leading-none" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: 'clamp(2.5rem, 6vw, 3.5rem)', color: '#E8EDF5', textTransform: 'uppercase' }}>
             ¿CÓMO <span className="text-gold-shimmer">FUNCIONA</span>?
           </h2>
