@@ -4,6 +4,9 @@ import { fetchMyBonusAnswer, submitBonusAnswer } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { BonusAnswer } from '../types';
 
+// Deadline: June 17, 2026 at 23:59 local time
+const DEADLINE = new Date('2026-06-17T23:59:00');
+
 // WC2026 qualified teams (can be updated as needed)
 const WC_TEAMS = [
   'Argentina', 'Brasil', 'Francia', 'Inglaterra', 'España', 'Alemania',
@@ -35,11 +38,13 @@ export default function GoldenBallPage() {
   }, [isAuthenticated, navigate]);
 
   const winnerDeclared = !!bonus?.tournamentWinner;
+  const pastDeadline = Date.now() > DEADLINE.getTime();
+  const isLocked = winnerDeclared || pastDeadline;
   const userWon = winnerDeclared && bonus?.answer === bonus?.tournamentWinner;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected || winnerDeclared) return;
+    if (!selected || isLocked) return;
     setSaving(true);
     setError(null);
     setSaved(false);
@@ -78,8 +83,8 @@ export default function GoldenBallPage() {
             <h2 className="text-xl font-black text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
               ¿Quién ganará el Mundial 2026?
             </h2>
-            {!winnerDeclared && (
-              <p className="text-wc-muted text-xs mt-1">Podés cambiar tu respuesta hasta que se declare el ganador</p>
+            {!isLocked && (
+              <p className="text-wc-muted text-xs mt-1">Podés cambiar tu respuesta hasta el <strong className="text-wc-text">17 de junio a las 23:59</strong></p>
             )}
           </div>
 
@@ -103,21 +108,31 @@ export default function GoldenBallPage() {
             </div>
           )}
 
-          {/* User's current pick */}
+          {/* User's current pick (before winner declared, but deadline may have passed) */}
           {bonus?.answer && !winnerDeclared && (
             <div className="rounded-lg px-4 py-3 text-center"
               style={{ background: 'rgba(0,200,122,0.07)', border: '1px solid rgba(0,200,122,0.2)' }}>
-              <p className="text-xs text-wc-muted mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>TU ELECCIÓN ACTUAL</p>
+              <p className="text-xs text-wc-muted mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>TU ELECCIÓN</p>
               <p className="text-lg font-black text-wc-gold" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>{bonus.answer}</p>
               {bonus.points > 0 && (
                 <p className="text-xs mt-1" style={{ color: '#F5A623' }}>🎉 Ganaste {bonus.points} puntos bonus</p>
               )}
+              {pastDeadline && !winnerDeclared && (
+                <p className="text-xs mt-1 text-wc-dim">🔒 Plazo cerrado · esperando al ganador del torneo</p>
+              )}
             </div>
           )}
 
-          {!winnerDeclared && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
+          {/* Deadline passed, no pick made */}
+          {!bonus?.answer && pastDeadline && !winnerDeclared && (
+            <div className="rounded-lg px-4 py-3 text-center"
+              style={{ background: 'rgba(91,110,140,0.08)', border: '1px solid rgba(91,110,140,0.2)' }}>
+              <p className="text-sm text-wc-muted">No hiciste una elección antes del cierre.</p>
+            </div>
+          )}
+
+          {!isLocked && (
+            <form onSubmit={handleSubmit} className="space-y-4">              <div>
                 <label className="block text-xs font-bold text-wc-muted mb-2"
                   style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   Seleccioná un equipo

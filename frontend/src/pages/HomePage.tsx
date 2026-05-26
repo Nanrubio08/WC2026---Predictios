@@ -62,11 +62,14 @@ const scoringRows = [
   { result: 'Predicción incorrecta', example: 'Eliges 2-1 · Final 1-1 (empate)', points: 0, width: '0%', color: '#5B6E8C', glow: 'transparent' },
 ];
 
+const goldenBallRow = { result: '🏆 Balón de Oro', example: 'Eliges el campeón del torneo', points: 30, width: '100%', color: '#FFD700', glow: 'rgba(255,215,0,0.4)' };
+
 const faqs = [
   { q: '¿Cuándo se cierran las predicciones?', a: '30 minutos antes del horario oficial del partido. Después de eso, el formulario desaparece y no se aceptan cambios.' },
   { q: '¿Puedo modificar mi predicción?', a: 'Sí, todas las veces que quieras hasta que se cierre la ventana de predicción.' },
   { q: '¿Cuándo se asignan los puntos?', a: 'Automáticamente una vez que el partido finaliza y se confirma el marcador final.' },
   { q: '¿Qué cuenta como resultado correcto?', a: 'Victoria local, victoria visitante o empate — según el resultado a los 90 minutos. No se tienen en cuenta el alargue ni los penaltis.' },
+  { q: '¿Qué es el Balón de Oro?', a: 'Una predicción especial: elegís qué selección ganará el Mundial 2026. Si acertás, sumás 30 puntos bonus de golpe. Podés cambiar tu elección hasta el 17 de junio a las 23:59. Después de esa fecha queda bloqueada.' },
 ];
 
 const stats = [
@@ -300,7 +303,7 @@ export default function HomePage() {
           {scoringRows.map((row, i) => (
             <div key={i}
               className="grid grid-cols-3 items-center px-6 py-5 transition-colors hover:bg-wc-surface2"
-              style={{ borderBottom: i < scoringRows.length - 1 ? '1px solid rgba(21,33,54,0.8)' : 'none', background: '#080F1C' }}>
+              style={{ borderBottom: '1px solid rgba(21,33,54,0.8)', background: '#080F1C' }}>
               <div>
                 <span className="font-bold" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.05rem', color: row.color, letterSpacing: '0.03em' }}>
                   {row.result}
@@ -318,6 +321,28 @@ export default function HomePage() {
               </div>
             </div>
           ))}
+          {/* Golden Ball bonus row */}
+          <div className="grid grid-cols-3 items-center px-6 py-5 transition-colors hover:bg-wc-surface2"
+            style={{ background: 'rgba(255,215,0,0.03)', borderTop: '1px solid rgba(255,215,0,0.15)' }}>
+            <div>
+              <span className="font-bold" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.05rem', color: goldenBallRow.color, letterSpacing: '0.03em' }}>
+                {goldenBallRow.result}
+              </span>
+              <div className="mt-1 text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
+                Cierra el 17 Jun · 23:59
+              </div>
+              <div className="mt-1.5 h-1 w-28 rounded-full" style={{ background: '#152136' }}>
+                <div className="h-1 rounded-full" style={{ width: goldenBallRow.width, background: goldenBallRow.color, boxShadow: `0 0 10px ${goldenBallRow.glow}` }} />
+              </div>
+            </div>
+            <span className="hidden pr-4 text-sm text-wc-muted sm:block">{goldenBallRow.example}</span>
+            <div className="flex justify-end">
+              <span className="rounded-full px-3 py-1 text-sm font-black tabular-nums"
+                style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.15rem', color: goldenBallRow.color, background: `${goldenBallRow.color}15`, border: `1px solid ${goldenBallRow.color}40`, letterSpacing: '0.05em', textShadow: `0 0 12px ${goldenBallRow.glow}` }}>
+                +30 PTS
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
