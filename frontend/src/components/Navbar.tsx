@@ -12,16 +12,7 @@ interface Props {
 
 function WC2026Badge() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-full border text-center leading-none"
-      style={{
-        width: 38, height: 38,
-        borderColor: 'rgba(245,166,35,0.5)',
-        background: 'radial-gradient(circle, rgba(245,166,35,0.12) 0%, rgba(245,166,35,0.03) 70%)',
-      }}
-    >
-      <span style={{ fontSize: 9, fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, color: '#F5A623', letterSpacing: '0.05em', lineHeight: 1 }}>WC</span>
-      <span style={{ fontSize: 11, fontFamily: 'Bebas Neue, sans-serif', color: '#FFD166', lineHeight: 1 }}>2026</span>
-    </div>
+    <img src="/images/logo.png" alt="minuto90.site logo" style={{ width: 38, height: 38, objectFit: 'contain' }} />
   );
 }
 
@@ -67,7 +58,7 @@ export default function Navbar({ isAuthenticated, user, onLogin, onLogout }: Pro
             <WC2026Badge />
             <span className="hidden sm:flex sm:flex-col sm:leading-tight">
               <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '0.08em', color: '#E8EDF5', textTransform: 'uppercase' }}>
-                LaCabala.app
+                minuto90.site
               </span>
               <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 600, fontSize: '0.65rem', letterSpacing: '0.2em', color: '#F5A623', textTransform: 'uppercase' }}>
               🇺🇸 🇨🇦 🇲🇽 Copa del Mundo 2026

@@ -9,7 +9,7 @@ interface Props {
 
 export default function AuthModal({ onSuccess, onClose }: Props) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', username: '', email: '', password: '' });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +25,7 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
     try {
       const result = mode === 'login'
         ? await loginUser({ email: form.email, password: form.password })
-        : await registerUser({ username: form.username, email: form.email, password: form.password });
+        : await registerUser({ name: form.name, username: form.username, email: form.email, password: form.password });
       onSuccess(result.token, result.user);
     } catch (err: any) {
       setError(err?.response?.data?.error ?? 'Something went wrong');
@@ -86,6 +86,13 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === 'register' && (
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-wc-muted"
+                  style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.12em' }}>Nombre completo</label>
+                <input name="name" value={form.name} onChange={handleChange} placeholder="Tu nombre" required className="input" />
+              </div>
+            )}
             {mode === 'register' && (
               <div>
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-wc-muted"

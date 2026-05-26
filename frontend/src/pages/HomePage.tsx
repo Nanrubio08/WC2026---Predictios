@@ -69,7 +69,7 @@ const faqs = [
   { q: '¿Puedo modificar mi predicción?', a: 'Sí, todas las veces que quieras hasta que se cierre la ventana de predicción.' },
   { q: '¿Cuándo se asignan los puntos?', a: 'Automáticamente una vez que el partido finaliza y se confirma el marcador final.' },
   { q: '¿Qué cuenta como resultado correcto?', a: 'Victoria local, victoria visitante o empate — según el resultado a los 90 minutos. No se tienen en cuenta el alargue ni los penaltis.' },
-  { q: '¿Qué es el Balón de Oro?', a: 'Una predicción especial: elegís qué selección ganará el Mundial 2026. Si acertás, sumás 30 puntos bonus de golpe. Podés cambiar tu elección hasta el 17 de junio a las 23:59. Después de esa fecha queda bloqueada.' },
+  { q: '¿Qué es el Balón de Oro?', a: 'Una predicción especial: eliges que selección ganará el Mundial 2026. Si aciertas, sumas 30 puntos bonus de golpe. Puedes cambiar tu elección hasta el 17 de junio a las 23:59. Después de esa fecha queda bloqueada.' },
 ];
 
 const stats = [
@@ -82,58 +82,7 @@ const stats = [
 function WC2026SVGLogo() {
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 220 240" xmlns="http://www.w3.org/2000/svg" className="h-48 w-48 sm:h-56 sm:w-56">
-        {/* Outer glow ring */}
-        <circle cx="110" cy="110" r="104" fill="none" stroke="rgba(245,166,35,0.12)" strokeWidth="8"/>
-        <circle cx="110" cy="110" r="100" fill="none" stroke="url(#goldRing)" strokeWidth="2"/>
-        {/* Inner circle */}
-        <circle cx="110" cy="110" r="90" fill="rgba(4,7,14,0.8)"/>
-
-        {/* Trophy body */}
-        <path d="M85 55 Q85 48 110 48 Q135 48 135 55 L131 93 Q120 105 110 105 Q100 105 89 93 Z" fill="url(#trophyFill)" stroke="rgba(245,166,35,0.4)" strokeWidth="1"/>
-        {/* Trophy stem */}
-        <rect x="103" y="105" width="14" height="22" rx="2" fill="url(#trophyFill)"/>
-        {/* Trophy base */}
-        <rect x="90" y="127" width="40" height="9" rx="3" fill="url(#trophyFill)"/>
-        <rect x="85" y="136" width="50" height="5" rx="2.5" fill="rgba(245,166,35,0.6)"/>
-        {/* Trophy handles */}
-        <path d="M85 65 Q65 65 65 82 Q65 100 85 95" fill="none" stroke="url(#trophyFill)" strokeWidth="5" strokeLinecap="round"/>
-        <path d="M135 65 Q155 65 155 82 Q155 100 135 95" fill="none" stroke="url(#trophyFill)" strokeWidth="5" strokeLinecap="round"/>
-        {/* Stars */}
-        <text x="110" y="170" textAnchor="middle" fontSize="10" fill="#F5A623" fontFamily="Barlow Condensed, sans-serif" fontWeight="700" letterSpacing="4">★ ★ ★</text>
-
-        {/* WORLD CUP text */}
-        <path id="topArc" d="M 30 110 A 80 80 0 0 1 190 110" fill="none"/>
-        <text fontSize="10.5" fontFamily="Barlow Condensed, sans-serif" fontWeight="700" fill="#E8EDF5" letterSpacing="4">
-          <textPath href="#topArc" startOffset="50%" textAnchor="middle">WORLD CUP</textPath>
-        </text>
-
-        {/* 2026 */}
-        <text x="110" y="202" textAnchor="middle" fontSize="36" fontFamily="Bebas Neue, sans-serif" fill="url(#goldText)" letterSpacing="4">2026</text>
-
-        {/* Host flags */}
-        <text x="75" y="225" textAnchor="middle" fontSize="16">🇺🇸</text>
-        <text x="110" y="225" textAnchor="middle" fontSize="16">🇨🇦</text>
-        <text x="145" y="225" textAnchor="middle" fontSize="16">🇲🇽</text>
-
-        <defs>
-          <linearGradient id="goldRing" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F5A623"/>
-            <stop offset="50%" stopColor="#FFD166"/>
-            <stop offset="100%" stopColor="#E8920F"/>
-          </linearGradient>
-          <linearGradient id="trophyFill" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFD166"/>
-            <stop offset="50%" stopColor="#F5A623"/>
-            <stop offset="100%" stopColor="#C27A0A"/>
-          </linearGradient>
-          <linearGradient id="goldText" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#F5A623"/>
-            <stop offset="50%" stopColor="#FFD166"/>
-            <stop offset="100%" stopColor="#F5A623"/>
-          </linearGradient>
-        </defs>
-      </svg>
+      <img src="/images/logomundial.jpg" alt="Logo Mundial 2026" className="h-48 w-48 sm:h-56 sm:w-56 object-contain" />
     </div>
   );
 }
@@ -379,7 +328,7 @@ export default function HomePage() {
             ¿Listo para jugar?
           </div>
           <h2 className="mb-5 leading-none" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 'clamp(2.8rem, 7vw, 4.5rem)', color: '#E8EDF5', textTransform: 'uppercase' }}>
-            UNITE AL <span className="text-gold-shimmer">JUEGO</span>
+            UNETE AL <span className="text-gold-shimmer">JUEGO</span>
           </h2>
           <p className="mb-8 text-wc-muted">Crea tu cuenta y predice todos los partidos del Mundial.<br className="hidden sm:block" /> Que gane el mejor.</p>
           <Link to="/matches" className="btn-primary px-10 py-3 text-base">

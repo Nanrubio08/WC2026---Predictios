@@ -18,6 +18,7 @@ export interface LeaderboardEntry {
   rank: number;
   userId: string;
   username: string;
+  name: string | null;
   totalPoints: number;
 }
 

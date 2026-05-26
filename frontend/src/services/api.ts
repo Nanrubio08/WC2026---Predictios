@@ -36,7 +36,7 @@ export async function fetchMatches(): Promise<Match[]> {
   return res.data;
 }
 
-export async function registerUser(data: { username: string; email: string; password: string }): Promise<{ token: string; user: User }> {
+export async function registerUser(data: { name: string; username: string; email: string; password: string }): Promise<{ token: string; user: User }> {
   const res = await api.post<{ token: string; user: User }>('/api/auth/register', data);
   return res.data;
 }

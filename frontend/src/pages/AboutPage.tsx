@@ -4,7 +4,7 @@ export default function AboutPage() {
       <div className="text-center mb-8">
         <p className="mb-2 text-xs font-bold uppercase tracking-widest text-wc-muted"
           style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.2em' }}>
-          LaCabala.app
+          minuto90.site
         </p>
         <h1 className="leading-none"
           style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 8vw, 3.5rem)', color: '#E8EDF5', textTransform: 'uppercase' }}>
@@ -13,9 +13,9 @@ export default function AboutPage() {
       </div>
 
       <section className="card space-y-3">
-        <h2 className="text-lg font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '0.06em' }}>¿Qué es LaCabala.app?</h2>
+        <h2 className="text-lg font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '0.06em' }}>¿Qué es minuto90.site?</h2>
         <p className="text-wc-muted text-sm leading-relaxed">
-          LaCabala.app es una quiniela online para el Mundial de Fútbol 2026 🇺🇸🇨🇦🇲🇽. Registrate, predice el marcador de cada partido antes del cierre de apuestas (30 minutos antes del partido), y compite en la tabla de posiciones.
+          minuto90.site es una pagina de entretenimiento online para el Mundial de Fútbol 2026 🇺🇸🇨🇦🇲🇽. Registrate, predice el marcador de cada partido antes del cierre de apuestas (30 minutos antes del partido), y compite en la tabla de posiciones.
         </p>
       </section>
 
@@ -47,7 +47,7 @@ export default function AboutPage() {
       <section className="card space-y-3">
         <h2 className="text-lg font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Contacto</h2>
         <p className="text-wc-muted text-sm leading-relaxed">
-          ¿Tenés preguntas o sugerencias? Escribinos a <a href="mailto:hola@lacabala.app" className="text-wc-gold hover:underline">hola@lacabala.app</a>
+          ¿Tienes preguntas o sugerencias? Escribenos a <a href="mailto:minuto90site@gmail.com" className="text-wc-gold hover:underline">minuto90site@gmail.com</a>
         </p>
       </section>
     </div>

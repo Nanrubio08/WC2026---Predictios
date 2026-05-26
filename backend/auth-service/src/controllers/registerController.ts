@@ -8,6 +8,7 @@ import { provisionUserLeaderboard } from '../clients/predictionsClient';
 const prisma = new PrismaClient();
 
 const RegisterSchema = z.object({
+  name: z.string().min(2).max(80),
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers and underscores'),
   email: z.string().email(),
   password: z.string().min(8).max(128),
@@ -20,7 +21,7 @@ export async function registerController(req: Request, res: Response): Promise<v
     return;
   }
 
-  const { username, email, password } = parsed.data;
+  const { name, username, email, password } = parsed.data;
 
   const existing = await prisma.user.findFirst({
     where: { OR: [{ username }, { email }] },
@@ -37,7 +38,7 @@ export async function registerController(req: Request, res: Response): Promise<v
   const isAdmin = adminEmails.includes(email.toLowerCase());
 
   const user = await prisma.user.create({
-    data: { username, email, passwordHash, isAdmin },
+    data: { name, username, email, passwordHash, isAdmin },
   });
 
   try {

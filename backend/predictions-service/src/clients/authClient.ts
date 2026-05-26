@@ -6,6 +6,7 @@ const INTERNAL_TOKEN = process.env.INTERNAL_SERVICE_TOKEN ?? '';
 export interface UserInfo {
   id: string;
   username: string;
+  name: string | null;
 }
 
 export async function getUsersByIds(userIds: string[]): Promise<UserInfo[]> {

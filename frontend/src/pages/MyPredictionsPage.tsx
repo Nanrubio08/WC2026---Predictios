@@ -106,7 +106,7 @@ export default function MyPredictionsPage() {
 
       {!loading && !error && predictions.length === 0 && (
         <div className="py-16 text-center text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.1rem' }}>
-          Aún no enviaste ningún pronóstico. ¡Empezá a predecir en la sección de Partidos!
+          Aún no enviaste ningún pronóstico. ¡Empieza a predecir en la sección de Partidos!
         </div>
       )}
 

@@ -84,7 +84,7 @@ export default function GoldenBallPage() {
               ¿Quién ganará el Mundial 2026?
             </h2>
             {!isLocked && (
-              <p className="text-wc-muted text-xs mt-1">Podés cambiar tu respuesta hasta el <strong className="text-wc-text">17 de junio a las 23:59</strong></p>
+              <p className="text-wc-muted text-xs mt-1">Puedes cambiar tu respuesta hasta el <strong className="text-wc-text">17 de junio a las 23:59</strong></p>
             )}
           </div>
 
@@ -135,7 +135,7 @@ export default function GoldenBallPage() {
             <form onSubmit={handleSubmit} className="space-y-4">              <div>
                 <label className="block text-xs font-bold text-wc-muted mb-2"
                   style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  Seleccioná un equipo
+                  Selecciona un equipo
                 </label>
                 <select
                   value={selected}

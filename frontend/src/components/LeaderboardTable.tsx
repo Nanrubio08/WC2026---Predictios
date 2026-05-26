@@ -39,7 +39,7 @@ export default function LeaderboardTable({ entries, currentUserId }: Props) {
             <div className="w-full rounded-xl p-3 text-center"
               style={{ background: p2.bg, border: `1px solid ${p2.border}`, minHeight: 100 }}>
               <div className="mb-1 font-black truncate" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.05rem', color: p2.color, letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-                {top3[1]?.username ?? '—'}
+                {top3[1]?.name ?? top3[1]?.username ?? '—'}
               </div>
               <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.6rem', color: p2.color, lineHeight: 1 }}>
                 {top3[1]?.totalPoints ?? 0}
@@ -54,7 +54,7 @@ export default function LeaderboardTable({ entries, currentUserId }: Props) {
             <div className="w-full rounded-xl p-3 text-center gold-glow"
               style={{ background: p1.bg, border: `1px solid ${p1.border}`, minHeight: 130 }}>
               <div className="mb-1 font-black truncate" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.15rem', color: p1.color, letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-                {top3[0]?.username ?? '—'}
+                {top3[0]?.name ?? top3[0]?.username ?? '—'}
               </div>
               <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '2rem', color: p1.color, lineHeight: 1 }}>
                 {top3[0]?.totalPoints ?? 0}
@@ -69,7 +69,7 @@ export default function LeaderboardTable({ entries, currentUserId }: Props) {
             <div className="w-full rounded-xl p-3 text-center"
               style={{ background: p3.bg, border: `1px solid ${p3.border}`, minHeight: 90 }}>
               <div className="mb-1 font-black truncate" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.05rem', color: p3.color, letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-                {top3[2]?.username ?? '—'}
+                {top3[2]?.name ?? top3[2]?.username ?? '—'}
               </div>
               <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.6rem', color: p3.color, lineHeight: 1 }}>
                 {top3[2]?.totalPoints ?? 0}
@@ -125,13 +125,18 @@ export default function LeaderboardTable({ entries, currentUserId }: Props) {
                           fontFamily: 'Barlow Condensed, sans-serif',
                           fontSize: '0.8rem',
                         }}>
-                        {e.username[0]?.toUpperCase()}
+                        {(e.name ?? e.username)[0]?.toUpperCase()}
                       </div>
                       <div>
                         <span className="text-sm font-bold"
                           style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1rem', color: isCurrentUser ? '#00C87A' : '#E8EDF5', letterSpacing: '0.03em' }}>
-                          {e.username}
+                          {e.name ?? e.username}
                         </span>
+                        {e.name && (
+                          <span className="block text-xs" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#5B6E8C', letterSpacing: '0.04em' }}>
+                            @{e.username}
+                          </span>
+                        )}
                         {isCurrentUser && (
                           <span className="ml-2 text-xs font-bold"
                             style={{ fontFamily: 'Barlow Condensed, sans-serif', color: 'rgba(0,200,122,0.7)', letterSpacing: '0.08em' }}>

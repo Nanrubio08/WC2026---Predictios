@@ -15,12 +15,12 @@ export default function PrivacyPage() {
           style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 7vw, 3rem)', color: '#E8EDF5', textTransform: 'uppercase' }}>
           POLÍTICA DE <span className="text-gold-shimmer">PRIVACIDAD</span>
         </h1>
-        <p className="text-wc-dim text-xs mt-2">Última actualización: Enero 2026</p>
+        <p className="text-wc-dim text-xs mt-2">Última actualización: Mayo 2026</p>
       </div>
 
       <Section title="1. Datos que recopilamos">
-        <p>Al registrarte recopilamos: nombre de usuario, dirección de correo electrónico y contraseña (almacenada cifrada). Opcionalmente podés agregar nombre completo, teléfono, equipo favorito y foto de perfil.</p>
-        <p>También registramos los pronósticos que enviás y tus interacciones con el servicio.</p>
+        <p>Al registrarte recopilamos: nombre de usuario, dirección de correo electrónico y contraseña (almacenada cifrada). Opcionalmente Puedes agregar nombre completo, teléfono, equipo favorito y foto de perfil.</p>
+        <p>También registramos los pronósticos que envias y tus interacciones con el servicio.</p>
       </Section>
 
       <Section title="2. Cómo usamos tus datos">
@@ -37,15 +37,15 @@ export default function PrivacyPage() {
       </Section>
 
       <Section title="5. Tus derechos">
-        <p>Podés actualizar o eliminar tu información de perfil en cualquier momento desde la sección "Mi Perfil". Para solicitar la eliminación completa de tu cuenta y datos, contactanos por correo.</p>
+        <p>Puedes actualizar o eliminar tu información de perfil en cualquier momento desde la sección "Mi Perfil". Para solicitar la eliminación completa de tu cuenta y datos, contactanos por correo.</p>
       </Section>
 
       <Section title="6. Retención de datos">
-        <p>Los datos se conservan mientras tu cuenta esté activa. Si solicitás la eliminación de tu cuenta, procederemos a borrar tus datos en un plazo máximo de 30 días.</p>
+        <p>Los datos se conservan mientras tu cuenta esté activa. Si solicitas la eliminación de tu cuenta, procederemos a borrar tus datos en un plazo máximo de 30 días.</p>
       </Section>
 
       <Section title="7. Contacto">
-        <p>Para consultas sobre privacidad o para ejercer tus derechos, escribinos a <a href="mailto:privacidad@lacabala.app" className="text-wc-gold hover:underline">privacidad@lacabala.app</a></p>
+        <p>Para consultas sobre privacidad o para ejercer tus derechos, escribenos a <a href="mailto:minuto90site@gmail.com" className="text-wc-gold hover:underline">minuto90site@gmail.com</a></p>
       </Section>
     </div>
   );

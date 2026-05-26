@@ -10,7 +10,7 @@ export default function Footer() {
       <div className="container mx-auto flex flex-col items-center gap-4 px-4 py-6 sm:flex-row sm:justify-between">
         <div className="flex items-center gap-2">
           <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: '0.85rem', color: '#5B6E8C', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            🇺🇸 🇨🇦 🇲🇽 LaCabala.app — Copa del Mundo 2026
+            🇺🇸 🇨🇦 🇲🇽 minuto90.site — Copa del Mundo 2026
           </span>
         </div>
         <nav className="flex items-center gap-5">
@@ -30,7 +30,7 @@ export default function Footer() {
           ))}
         </nav>
         <p className="text-xs" style={{ color: '#2A3A52', fontFamily: 'Barlow Condensed, sans-serif' }}>
-          © {year} LaCabala.app
+          © {year} minuto90.site
         </p>
       </div>
     </footer>
