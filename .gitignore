@@ -77,3 +77,7 @@ skills-lock.json
 *.crt
 *.p12
 *.pfx
+
+# ── Let's Encrypt (generated on server, never commit) ────────────────────────
+certbot/conf/
+certbot/www/
