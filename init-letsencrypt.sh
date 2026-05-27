@@ -72,7 +72,7 @@ echo "  Done."
 
 # ── Start only the Nginx container (backends not needed for cert issuance) ────
 echo "→ Starting Nginx (HTTP only for ACME challenge)..."
-docker compose -f "$COMPOSE_FILE" up -d worldcup-frontend
+docker compose -f "$COMPOSE_FILE" up -d --no-deps worldcup-frontend
 sleep 3
 
 # ── Delete the dummy cert ─────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ echo "→ Requesting Let's Encrypt certificate..."
 STAGING_FLAG=""
 [ "$STAGING" = "1" ] && STAGING_FLAG="--staging"
 
-docker compose -f "$COMPOSE_FILE" run --rm certbot certonly \
+docker compose -f "$COMPOSE_FILE" run --rm --entrypoint certbot certbot certonly \
   --webroot -w /var/www/certbot \
   $STAGING_FLAG \
   --email "$EMAIL" \
