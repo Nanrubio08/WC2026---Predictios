@@ -141,7 +141,7 @@ export async function adminDeclareWinner(winner: string): Promise<{ winner: stri
 
 export async function adminFetchUsers(): Promise<{ id: string; username: string; name: string | null; email: string; createdAt: string }[]> {
   const res = await api.get('/api/admin/users');
-  return res.data;
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 export async function adminDeleteUser(userId: string): Promise<void> {
@@ -152,7 +152,7 @@ export type InviteCodeRow = { code: string; status: 'used' | 'available'; userna
 
 export async function adminFetchInviteCodes(): Promise<InviteCodeRow[]> {
   const res = await api.get<InviteCodeRow[]>('/api/admin/invite-codes');
-  return res.data;
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 export async function adminGenerateCodes(count: number): Promise<{ generated: number; codes: string[] }> {
