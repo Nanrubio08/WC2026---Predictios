@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminLeaderboardExportUrl, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminDeleteUser } from '../services/api';
+import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminLeaderboardExportUrl, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminDeleteUser, adminFetchInviteCodes, adminGenerateCodes, adminInviteCodesExportUrl, type InviteCodeRow } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { Match, AuditLog } from '../types';
 
@@ -27,7 +27,7 @@ function ScoreEditor({ match, onUpdated }: { match: Match; onUpdated: (m: Match)
     const h = parseInt(home, 10);
     const a = parseInt(away, 10);
     if (isNaN(h) || isNaN(a) || h < 0 || a < 0) {
-      setError('Ingresá marcadores válidos (0-99)');
+      setError('Ingresa marcadores válidos (0-99)');
       return;
     }
     setLoading(true);
@@ -113,7 +113,7 @@ function GoldenBallAdmin() {
       <div className="flex items-center gap-3">
         <span className="text-2xl">🏆</span>
         <div>
-          <h3 className="font-black text-wc-text uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>Balón de Oro — Declarar Campeón</h3>
+          <h3 className="font-black text-wc-text uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>Gol de Oro — Declarar Campeón</h3>
           <p className="text-xs text-wc-muted">Otorga 30 pts a todos los usuarios que eligieron este equipo. Irreversible.</p>
         </div>
       </div>
@@ -137,7 +137,7 @@ function GoldenBallAdmin() {
             className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-wc-text focus:outline-none"
             style={{ background: '#0D1829', border: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif' }}
           >
-            <option value="">— Seleccioná el campeón —</option>
+            <option value="">— Selecciona el campeón —</option>
             {WC_TEAMS.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
@@ -232,13 +232,132 @@ function UsersAdmin() {
   );
 }
 
+function InviteCodesAdmin() {
+  const [codes, setCodes] = useState<InviteCodeRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [count, setCount] = useState(10);
+  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    adminFetchInviteCodes()
+      .then(setCodes)
+      .catch(() => setError('Error al cargar códigos'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleGenerate(e: React.FormEvent) {
+    e.preventDefault();
+    setGenerating(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const res = await adminGenerateCodes(count);
+      setSuccessMsg(`✓ ${res.generated} códigos generados`);
+      const updated = await adminFetchInviteCodes();
+      setCodes(updated);
+    } catch (err: any) {
+      setError(err?.response?.data?.error ?? 'Error al generar códigos');
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  const available = codes.filter((c) => c.status === 'available').length;
+  const used = codes.filter((c) => c.status === 'used').length;
+
+  if (loading) return <div className="animate-pulse h-24 rounded-xl" style={{ background: 'rgba(21,33,54,0.6)' }} />;
+
+  return (
+    <div className="space-y-4">
+      {/* Stats + Generate */}
+      <div className="card p-5 space-y-4">
+        <div className="flex items-center gap-6 flex-wrap">
+          <div className="text-center">
+            <div className="text-2xl font-black" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#00C87A' }}>{available}</div>
+            <div className="text-xs text-wc-muted uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>Disponibles</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-black" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F5A623' }}>{used}</div>
+            <div className="text-xs text-wc-muted uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>Utilizados</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-black text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>{codes.length}</div>
+            <div className="text-xs text-wc-muted uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>Total</div>
+          </div>
+        </div>
+
+        <form onSubmit={handleGenerate} className="flex gap-3 items-end flex-wrap">
+          <div>
+            <label className="block text-xs font-bold text-wc-muted mb-1 uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>Cantidad a generar</label>
+            <input
+              type="number" min={1} max={500} value={count}
+              onChange={(e) => setCount(Number(e.target.value))}
+              className="input w-28 text-center"
+              style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1rem' }}
+            />
+          </div>
+          <button type="submit" disabled={generating}
+            className="rounded-lg px-5 py-2 text-sm font-black uppercase"
+            style={{ background: generating ? 'rgba(0,200,122,0.1)' : 'linear-gradient(135deg,#00C87A,#00A864)', color: '#04070E', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', opacity: generating ? 0.6 : 1 }}>
+            {generating ? 'Generando…' : '+ Generar códigos'}
+          </button>
+          <a href={adminInviteCodesExportUrl()} download="invite-codes.csv"
+            className="rounded-lg px-5 py-2 text-sm font-black uppercase no-underline"
+            style={{ background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.3)', color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>
+            ↓ Exportar CSV
+          </a>
+        </form>
+
+        {successMsg && <p className="text-xs" style={{ color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>{successMsg}</p>}
+        {error && <p className="text-xs text-red-400">{error}</p>}
+      </div>
+
+      {/* Table */}
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(21,33,54,0.8)', background: 'rgba(245,166,35,0.04)' }}>
+                {['CÓDIGO', 'ESTADO', 'USUARIO', 'EMAIL', 'USADO EL'].map((h) => (
+                  <th key={h} className="py-3 px-4 text-left text-xs font-bold text-wc-muted"
+                    style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {codes.map((c) => (
+                <tr key={c.code} style={{ borderBottom: '1px solid rgba(21,33,54,0.5)' }}>
+                  <td className="py-3 px-4 font-mono text-sm font-bold tracking-widest text-wc-text">{c.code}</td>
+                  <td className="py-3 px-4">
+                    <span className="text-xs font-bold uppercase" style={{
+                      fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em',
+                      color: c.status === 'available' ? '#00C87A' : '#5B6E8C',
+                    }}>{c.status === 'available' ? 'Disponible' : 'Usado'}</span>
+                  </td>
+                  <td className="py-3 px-4 text-xs text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>{c.username ?? '—'}</td>
+                  <td className="py-3 px-4 text-xs text-wc-dim font-mono">{c.email ?? '—'}</td>
+                  <td className="py-3 px-4 text-xs text-wc-muted tabular-nums" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    {c.usedAt ? new Date(c.usedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { user, isAuthenticated } = useAuthToken();
   const navigate = useNavigate();
   const [matches, setMatches] = useState<Match[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'matches' | 'audit' | 'bonus' | 'users'>('matches');
+  const [tab, setTab] = useState<'matches' | 'audit' | 'bonus' | 'users' | 'codes'>('matches');
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') { navigate('/'); return; }
@@ -269,8 +388,9 @@ export default function AdminPage() {
       <div className="mb-5 flex items-center gap-3 flex-wrap">
         <button className={pillBase} style={tab === 'matches' ? activeStyle : inactiveStyle} onClick={() => setTab('matches')}>Partidos</button>
         <button className={pillBase} style={tab === 'audit' ? activeStyle : inactiveStyle} onClick={() => setTab('audit')}>Audit Log</button>
-        <button className={pillBase} style={tab === 'bonus' ? activeStyle : inactiveStyle} onClick={() => setTab('bonus')}>🏆 Balón de Oro</button>
+        <button className={pillBase} style={tab === 'bonus' ? activeStyle : inactiveStyle} onClick={() => setTab('bonus')}>🏆 Gol de Oro</button>
         <button className={pillBase} style={tab === 'users' ? activeStyle : inactiveStyle} onClick={() => setTab('users')}>👥 Usuarios</button>
+        <button className={pillBase} style={tab === 'codes' ? activeStyle : inactiveStyle} onClick={() => setTab('codes')}>🎟 Códigos</button>
         <a
           href={adminLeaderboardExportUrl()}
           className={`${pillBase} no-underline`}
@@ -286,6 +406,8 @@ export default function AdminPage() {
       {!loading && tab === 'bonus' && <GoldenBallAdmin />}
 
       {!loading && tab === 'users' && <UsersAdmin />}
+
+      {!loading && tab === 'codes' && <InviteCodesAdmin />}
 
       {!loading && tab === 'matches' && (
         <div className="card overflow-hidden">

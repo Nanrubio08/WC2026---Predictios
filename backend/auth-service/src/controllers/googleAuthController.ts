@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import { PrismaClient } from '../generated/client';
 import { signToken, generateRefreshToken } from '../utils/jwt';
+import { provisionUserLeaderboard } from '../clients/predictionsClient';
+import { claimInviteCode } from '../utils/inviteCodes';
 
 const prisma = new PrismaClient();
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -12,20 +14,17 @@ function getClient(): OAuth2Client {
   return new OAuth2Client(clientId);
 }
 
-// Derive a unique username from an email address.
-// e.g. "john.doe@gmail.com" → "john.doe", and if taken → "john.doe_a1b2"
 function usernameFromEmail(email: string): string {
   return email.split('@')[0].replace(/[^a-z0-9_]/gi, '_').toLowerCase();
 }
 
 export async function googleAuthController(req: Request, res: Response): Promise<void> {
-  const { credential } = req.body as { credential?: string };
+  const { credential, code } = req.body as { credential?: string; code?: string };
   if (!credential) {
     res.status(400).json({ error: 'Missing Google credential' });
     return;
   }
 
-  // Verify the ID token with Google
   let payload: { sub: string; email: string; name?: string; picture?: string };
   try {
     const client = getClient();
@@ -50,7 +49,6 @@ export async function googleAuthController(req: Request, res: Response): Promise
   if (!user) {
     user = await prisma.user.findUnique({ where: { email: payload.email } });
     if (user) {
-      // Existing email/password account → link Google ID
       user = await prisma.user.update({
         where: { id: user.id },
         data: { googleId: payload.sub },
@@ -59,7 +57,21 @@ export async function googleAuthController(req: Request, res: Response): Promise
   }
 
   if (!user) {
-    // New user — derive a unique username
+    // New user — require an invite code (unless they are an admin email)
+    const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase());
+    const isAdmin = adminEmails.includes(payload.email.toLowerCase());
+
+    if (!isAdmin) {
+      if (!code) {
+        res.status(400).json({ error: 'Se requiere un código de acceso para crear una cuenta', field: 'code' });
+        return;
+      }
+      if (!/^\d{6}$/.test(code)) {
+        res.status(400).json({ error: 'El código de acceso debe tener 6 dígitos', field: 'code' });
+        return;
+      }
+    }
+
     let base = usernameFromEmail(payload.email);
     let username = base;
     const existing = await prisma.user.findUnique({ where: { username } });
@@ -67,16 +79,37 @@ export async function googleAuthController(req: Request, res: Response): Promise
       username = `${base}_${Math.random().toString(36).slice(2, 6)}`;
     }
 
-    user = await prisma.user.create({
-      data: {
-        email: payload.email,
-        username,
-        name: payload.name ?? username,
-        googleId: payload.sub,
-        avatarUrl: payload.picture ?? null,
-        passwordHash: null,
-      },
-    });
+    try {
+      user = await prisma.$transaction(async (tx) => {
+        const newUser = await tx.user.create({
+          data: {
+            email: payload.email,
+            username,
+            name: payload.name ?? username,
+            googleId: payload.sub,
+            avatarUrl: payload.picture ?? null,
+            passwordHash: null,
+            isAdmin,
+          },
+        });
+
+        if (!isAdmin) {
+          const codeError = await claimInviteCode(tx, code!, newUser.id);
+          if (codeError) throw Object.assign(new Error(codeError.error), { field: 'code', status: 400 });
+        }
+
+        return newUser;
+      });
+    } catch (err: any) {
+      res.status(err.status ?? 400).json({ error: err.message, field: err.field });
+      return;
+    }
+
+    try {
+      await provisionUserLeaderboard(user.id);
+    } catch (err) {
+      console.error('Failed to provision leaderboard for Google user', user.id, err);
+    }
   }
 
   const role = user.isAdmin ? 'admin' : 'user';

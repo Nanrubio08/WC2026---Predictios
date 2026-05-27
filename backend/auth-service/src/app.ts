@@ -9,6 +9,7 @@ import healthRouter from './routes/health';
 import authRouter from './routes/authRoutes';
 import internalUsersRouter from './routes/internalUsersRoutes';
 import adminUsersRouter from './routes/adminUsersRoutes';
+import adminInviteCodesRouter from './routes/adminInviteCodesRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -22,6 +23,7 @@ app.use(cookieParser());
 app.use('/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/admin/users', adminUsersRouter);
+app.use('/api/admin/invite-codes', adminInviteCodesRouter);
 app.use('/internal/users', internalUsersRouter);
 
 app.use(errorHandler);

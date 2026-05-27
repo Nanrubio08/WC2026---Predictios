@@ -10,7 +10,7 @@ interface Props {
 
 export default function AuthModal({ onSuccess, onClose }: Props) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [form, setForm] = useState({ name: '', username: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', username: '', email: '', password: '', code: '' });
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<string, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,10 +19,14 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const result = await googleAuth(credential);
+      const result = await googleAuth(credential, mode === 'register' ? form.code : undefined);
       onSuccess(result.token, result.user);
     } catch (err: any) {
-      setError(err?.response?.data?.error ?? 'Google sign-in failed');
+      const data = err?.response?.data;
+      const msg = data?.error ?? 'Google sign-in failed';
+      const field = data?.field;
+      if (field) { setFieldErrors({ [field]: msg }); setError(null); }
+      else { setError(msg); setFieldErrors({}); }
     } finally {
       setLoading(false);
     }
@@ -41,7 +45,7 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
     try {
       const result = mode === 'login'
         ? await loginUser({ email: form.email, password: form.password })
-        : await registerUser({ name: form.name, username: form.username, email: form.email, password: form.password });
+        : await registerUser({ name: form.name, username: form.username, email: form.email, password: form.password, code: form.code });
       onSuccess(result.token, result.user);
     } catch (err: any) {
       const data = err?.response?.data;
@@ -76,7 +80,6 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
           </button>
 
           <div className="mb-6 text-center">
-            <div className="mb-3 text-5xl">⚽</div>
             <h2 className="font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.8rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
               {mode === 'login' ? 'Bienvenido de vuelta' : 'Únete al juego'}
             </h2>
@@ -148,6 +151,29 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
               />
               {fieldErrors.password && <p className="mt-1 text-xs" style={{ color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif' }}>⚠ {fieldErrors.password}</p>}
             </div>
+
+            {mode === 'register' && (
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-wc-muted"
+                  style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.12em' }}>Código de acceso</label>
+                <input
+                  name="code" value={form.code} onChange={handleChange}
+                  placeholder="000000" required maxLength={6}
+                  className="input"
+                  style={{
+                    letterSpacing: '0.3em',
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                    fontSize: '1.2rem',
+                    textAlign: 'center',
+                    ...(fieldErrors.code ? { borderColor: 'rgba(240,62,62,0.7)', boxShadow: '0 0 0 2px rgba(240,62,62,0.15)' } : {}),
+                  }}
+                />
+                {fieldErrors.code
+                  ? <p className="mt-1 text-xs" style={{ color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif' }}>⚠ {fieldErrors.code}</p>
+                  : <p className="mt-1 text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>Ingresá el código de 6 dígitos que recibiste</p>
+                }
+              </div>
+            )}
 
             {error && (
               <div className="rounded-lg px-3 py-2 text-sm" style={{ background: 'rgba(240,62,62,0.08)', border: '1px solid rgba(240,62,62,0.25)', color: '#F03E3E' }}>

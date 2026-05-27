@@ -36,7 +36,7 @@ export async function fetchMatches(): Promise<Match[]> {
   return res.data;
 }
 
-export async function registerUser(data: { name: string; username: string; email: string; password: string }): Promise<{ token: string; user: User }> {
+export async function registerUser(data: { name: string; username: string; email: string; password: string; code: string }): Promise<{ token: string; user: User }> {
   const res = await api.post<{ token: string; user: User }>('/api/auth/register', data);
   return res.data;
 }
@@ -46,8 +46,8 @@ export async function loginUser(data: { email: string; password: string }): Prom
   return res.data;
 }
 
-export async function googleAuth(credential: string): Promise<{ token: string; user: User }> {
-  const res = await api.post<{ token: string; user: User }>('/api/auth/google', { credential });
+export async function googleAuth(credential: string, code?: string): Promise<{ token: string; user: User }> {
+  const res = await api.post<{ token: string; user: User }>('/api/auth/google', { credential, code });
   return res.data;
 }
 
@@ -146,4 +146,20 @@ export async function adminFetchUsers(): Promise<{ id: string; username: string;
 
 export async function adminDeleteUser(userId: string): Promise<void> {
   await api.delete(`/api/admin/users/${userId}`);
+}
+
+export type InviteCodeRow = { code: string; status: 'used' | 'available'; username: string | null; email: string | null; usedAt: string | null; createdAt: string };
+
+export async function adminFetchInviteCodes(): Promise<InviteCodeRow[]> {
+  const res = await api.get<InviteCodeRow[]>('/api/admin/invite-codes');
+  return res.data;
+}
+
+export async function adminGenerateCodes(count: number): Promise<{ generated: number; codes: string[] }> {
+  const res = await api.post('/api/admin/invite-codes/generate', { count });
+  return res.data;
+}
+
+export function adminInviteCodesExportUrl(): string {
+  return '/api/admin/invite-codes/export';
 }

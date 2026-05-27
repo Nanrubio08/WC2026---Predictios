@@ -37,3 +37,13 @@ model RefreshToken {
 
   @@map("refresh_tokens")
 }
+
+model InviteCode {
+  id        String    @id @default(uuid())
+  code      String    @unique
+  usedBy    String?   @map("used_by")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("invite_codes")
+}

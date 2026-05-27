@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { hashPassword } from '../utils/password';
 import { signToken } from '../utils/jwt';
 import { provisionUserLeaderboard } from '../clients/predictionsClient';
+import { claimInviteCode } from '../utils/inviteCodes';
 
 const prisma = new PrismaClient();
 
@@ -16,6 +17,7 @@ const RegisterSchema = z.object({
     .regex(/^[a-zA-Z0-9_]+$/, 'El usuario solo puede contener letras, números y guiones bajos (sin espacios)'),
   email: z.string().email('Ingresá un correo electrónico válido'),
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').max(128, 'La contraseña es demasiado larga'),
+  code: z.string().length(6, 'El código de acceso debe tener 6 dígitos').regex(/^\d{6}$/, 'El código de acceso debe ser numérico'),
 });
 
 export async function registerController(req: Request, res: Response): Promise<void> {
@@ -27,7 +29,7 @@ export async function registerController(req: Request, res: Response): Promise<v
     return;
   }
 
-  const { name, username, email, password } = parsed.data;
+  const { name, username, email, password, code } = parsed.data;
 
   const existing = await prisma.user.findFirst({
     where: { OR: [{ username }, { email }] },
@@ -43,13 +45,29 @@ export async function registerController(req: Request, res: Response): Promise<v
   }
 
   const passwordHash = await hashPassword(password);
-
   const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase());
   const isAdmin = adminEmails.includes(email.toLowerCase());
 
-  const user = await prisma.user.create({
-    data: { name, username, email, passwordHash, isAdmin },
-  });
+  let user: Awaited<ReturnType<typeof prisma.user.create>>;
+
+  try {
+    user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: { name, username, email, passwordHash, isAdmin },
+      });
+
+      // Admin accounts skip the invite code requirement
+      if (!isAdmin) {
+        const codeError = await claimInviteCode(tx, code, newUser.id);
+        if (codeError) throw Object.assign(new Error(codeError.error), { field: 'code', status: 400 });
+      }
+
+      return newUser;
+    });
+  } catch (err: any) {
+    res.status(err.status ?? 400).json({ error: err.message, field: err.field });
+    return;
+  }
 
   try {
     await provisionUserLeaderboard(user.id);
