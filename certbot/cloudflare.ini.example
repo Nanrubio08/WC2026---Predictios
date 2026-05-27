@@ -1,0 +1,13 @@
+# Cloudflare API credentials for certbot DNS challenge.
+# Generate a token at: https://dash.cloudflare.com/profile/api-tokens
+#
+# Required permissions:
+#   Zone → DNS → Edit
+#   Zone → Zone → Read  (only for the zones you want to manage)
+#
+# Copy this file to certbot/cloudflare.ini, fill in your token, and
+# set strict permissions:
+#   cp certbot/cloudflare.ini.example certbot/cloudflare.ini
+#   chmod 600 certbot/cloudflare.ini
+
+dns_cloudflare_api_token = YOUR_CLOUDFLARE_API_TOKEN_HERE

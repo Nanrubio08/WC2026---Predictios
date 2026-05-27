@@ -101,7 +101,6 @@ services:
     volumes:
       - ./frontend/nginx/default.prod.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
     depends_on:
       worldcup-auth-service:
         condition: service_healthy
@@ -119,12 +118,17 @@ services:
   # ─── Certbot (auto-renew every 12h) ────────────────────────────────────────
 
   certbot:
-    image: certbot/certbot
+    image: certbot/dns-cloudflare
     container_name: worldcup-certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    # Attempt renewal every 12h; certbot skips if cert is not due yet
+      - ./certbot/cloudflare.ini:/etc/letsencrypt/cloudflare.ini:ro
+    # Attempt renewal every 12h via Cloudflare DNS challenge; certbot skips if cert is not due yet
     entrypoint: >
-      /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"
+      /bin/sh -c "trap exit TERM; while :; do
+        certbot renew
+          --dns-cloudflare
+          --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini;
+        sleep 12h & wait $${!};
+      done;"
     restart: unless-stopped
