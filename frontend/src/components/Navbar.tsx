@@ -76,7 +76,7 @@ export default function Navbar({ isAuthenticated, user, onLogin, onLogout }: Pro
 
   return (
     <>
-      <header className="sticky top-0 z-40 backdrop-blur-md"
+      <header className="sticky top-0 z-40 backdrop-blur-md" ref={menuRef}
         style={{
           background: 'rgba(4, 7, 14, 0.95)',
           borderBottom: '1px solid rgba(245, 166, 35, 0.12)',
@@ -86,7 +86,7 @@ export default function Navbar({ isAuthenticated, user, onLogin, onLogout }: Pro
         {/* Top gold accent line */}
         <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #F5A623 30%, #FFD166 50%, #F5A623 70%, transparent)', opacity: 0.6 }} />
 
-        <div className="container mx-auto flex h-16 items-center gap-5 px-4" ref={menuRef}>
+        <div className="container mx-auto flex h-16 items-center gap-5 px-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 shrink-0">
             <WC2026Badge />
