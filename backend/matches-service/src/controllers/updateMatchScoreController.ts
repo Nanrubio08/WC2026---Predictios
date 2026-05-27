@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/client';
 import { z } from 'zod';
 import { triggerScoring } from '../clients/scoringClient';
 import { AdminRequest } from '../middleware/requireAdmin';

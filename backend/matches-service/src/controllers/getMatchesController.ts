@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/client';
 import { AuthenticatedRequest } from '../middleware/authenticateJwt';
 import { getUserPredictions } from '../clients/predictionsClient';
 

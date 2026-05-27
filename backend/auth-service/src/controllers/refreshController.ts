@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/client';
 import { signToken } from '../utils/jwt';
 
 const prisma = new PrismaClient();

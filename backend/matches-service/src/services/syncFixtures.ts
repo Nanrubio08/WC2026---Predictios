@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/client';
 import { fetchFixtures, FDMatch } from '../utils/apiFootball';
 
 const prisma = new PrismaClient();

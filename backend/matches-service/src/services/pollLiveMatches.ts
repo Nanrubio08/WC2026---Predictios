@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/client';
 import { fetchLiveFixtures } from '../utils/apiFootball';
 import { triggerScoring } from '../clients/scoringClient';
 

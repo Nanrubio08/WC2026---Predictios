@@ -51,7 +51,8 @@ Desktop.ini
 # ── Prisma ────────────────────────────────────────────────────────────────────
 # Keep migrations tracked but exclude the lock file
 prisma/migrations/**/migration_lock.toml
-# Prisma generated client (regenerated on postinstall)
+# Prisma generated client (regenerated on postinstall / prisma:generate)
+**/src/generated/
 **/node_modules/.prisma/
 
 # ── Docker ────────────────────────────────────────────────────────────────────

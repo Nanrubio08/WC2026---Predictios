@@ -18,7 +18,9 @@
     "dev:frontend": "npm --workspace frontend run dev",
     "dev": "concurrently \"npm run dev:auth\" \"npm run dev:matches\" \"npm run dev:predictions\" \"npm run dev:frontend\"",
     "build": "npm --workspace auth-service run build && npm --workspace matches-service run build && npm --workspace predictions-service run build && npm --workspace frontend run build",
-    "lint": "npm --workspace auth-service run lint && npm --workspace matches-service run lint && npm --workspace predictions-service run lint && npm --workspace frontend run lint"
+    "lint": "npm --workspace auth-service run lint && npm --workspace matches-service run lint && npm --workspace predictions-service run lint && npm --workspace frontend run lint",
+    "prisma:generate": "cd backend/auth-service && npx prisma generate && cd ../matches-service && npx prisma generate && cd ../predictions-service && npx prisma generate",
+    "postinstall": "npm run prisma:generate"
   },
   "devDependencies": {
     "concurrently": "^8.2.0"

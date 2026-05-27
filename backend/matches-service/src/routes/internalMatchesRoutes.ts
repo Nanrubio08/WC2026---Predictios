@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireInternalToken } from '../middleware/requireInternalToken';
 import { getMatchByIdController } from '../controllers/getMatchByIdController';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/client';
 
 const prisma = new PrismaClient();
 
