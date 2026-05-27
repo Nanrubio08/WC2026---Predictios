@@ -79,13 +79,13 @@ const stats = [
   { value: '5', label: 'Puntos por Marcador exacto' },
 ];
 
-function WC2026SVGLogo() {
-  return (
-    <div className="flex flex-col items-center">
-      <img src="/images/logomundial.jpg" alt="Logo Mundial 2026" className="h-48 w-48 sm:h-56 sm:w-56 object-contain" />
-    </div>
-  );
-}
+//function WC2026SVGLogo() {
+  //return (
+    //<div className="flex flex-col items-center">
+      //<img src="/images/logomundial.jpg" alt="Logo Mundial 2026" className="h-48 w-48 sm:h-56 sm:w-56 object-contain" />
+    //</div>
+  //);
+//}
 
 export default function HomePage() {
   const tickerContent = [...tickerItems, ...tickerItems];
@@ -102,11 +102,6 @@ export default function HomePage() {
         <div className="hero-radial absolute inset-0" />
         {/* Subtle noise */}
         <div className="relative flex flex-col items-center px-6 py-16 text-center sm:py-24 lg:py-32">
-
-          {/* WC 2026 Badge */}
-          <div className="animate-fade-in delay-100 mb-6">
-            <WC2026SVGLogo />
-          </div>
 
           {/* Tournament badge chip */}
           <div className="animate-fade-in-up delay-200 mb-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest"
