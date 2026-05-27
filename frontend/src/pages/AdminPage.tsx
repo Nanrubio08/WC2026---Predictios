@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminLeaderboardExportUrl, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminDeleteUser, adminFetchInviteCodes, adminGenerateCodes, adminInviteCodesExportUrl, type InviteCodeRow } from '../services/api';
+import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminExportLeaderboardCsv, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminDeleteUser, adminFetchInviteCodes, adminGenerateCodes, adminExportInviteCodesCsv, type InviteCodeRow } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { Match, AuditLog } from '../types';
 
@@ -303,11 +303,11 @@ function InviteCodesAdmin() {
             style={{ background: generating ? 'rgba(0,200,122,0.1)' : 'linear-gradient(135deg,#00C87A,#00A864)', color: '#04070E', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', opacity: generating ? 0.6 : 1 }}>
             {generating ? 'Generando…' : '+ Generar códigos'}
           </button>
-          <a href={adminInviteCodesExportUrl()} download="invite-codes.csv"
-            className="rounded-lg px-5 py-2 text-sm font-black uppercase no-underline"
+          <button type="button" onClick={() => adminExportInviteCodesCsv().catch(() => {})}
+            className="rounded-lg px-5 py-2 text-sm font-black uppercase"
             style={{ background: 'rgba(245,166,35,0.1)', border: '1px solid rgba(245,166,35,0.3)', color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>
             ↓ Exportar CSV
-          </a>
+          </button>
         </form>
 
         {successMsg && <p className="text-xs" style={{ color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>{successMsg}</p>}
@@ -391,14 +391,13 @@ export default function AdminPage() {
         <button className={pillBase} style={tab === 'bonus' ? activeStyle : inactiveStyle} onClick={() => setTab('bonus')}>🏆 Gol de Oro</button>
         <button className={pillBase} style={tab === 'users' ? activeStyle : inactiveStyle} onClick={() => setTab('users')}>👥 Usuarios</button>
         <button className={pillBase} style={tab === 'codes' ? activeStyle : inactiveStyle} onClick={() => setTab('codes')}>🎟 Códigos</button>
-        <a
-          href={adminLeaderboardExportUrl()}
-          className={`${pillBase} no-underline`}
+        <button
+          className={pillBase}
           style={{ background: 'rgba(0,200,122,0.1)', border: '1px solid rgba(0,200,122,0.25)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase' }}
-          download="leaderboard.csv"
+          onClick={() => adminExportLeaderboardCsv().catch(() => {})}
         >
           ↓ Exportar CSV
-        </a>
+        </button>
       </div>
 
       {loading && <div className="space-y-3">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="card animate-pulse h-16" />)}</div>}

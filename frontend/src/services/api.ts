@@ -125,8 +125,14 @@ export async function adminFetchAuditLogs(): Promise<AuditLog[]> {
   return res.data;
 }
 
-export function adminLeaderboardExportUrl(): string {
-  return '/api/admin/leaderboard/export';
+export async function adminExportLeaderboardCsv(): Promise<void> {
+  const res = await api.get('/api/admin/leaderboard/export', { responseType: 'blob' });
+  const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'leaderboard.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function adminGetBonusConfig(): Promise<{ winner: string | null; declaredAt: string | null }> {
@@ -160,6 +166,12 @@ export async function adminGenerateCodes(count: number): Promise<{ generated: nu
   return res.data;
 }
 
-export function adminInviteCodesExportUrl(): string {
-  return '/api/admin/invite-codes/export';
+export async function adminExportInviteCodesCsv(): Promise<void> {
+  const res = await api.get('/api/admin/invite-codes/export', { responseType: 'blob' });
+  const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'invite-codes.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
