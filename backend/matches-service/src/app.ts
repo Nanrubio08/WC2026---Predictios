@@ -13,6 +13,7 @@ import { registerPollLiveMatchesJob } from './jobs/pollLiveMatches';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
+app.set('trust proxy', 1); // trust Nginx reverse proxy for X-Forwarded-For
 const PORT = process.env.PORT ?? 3002;
 
 app.use(cors(corsOptions));

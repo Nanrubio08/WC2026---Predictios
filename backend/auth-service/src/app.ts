@@ -11,6 +11,7 @@ import internalUsersRouter from './routes/internalUsersRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
+app.set('trust proxy', 1); // trust Nginx reverse proxy for X-Forwarded-For
 const PORT = process.env.PORT ?? 3001;
 
 app.use(cors(corsOptions));
