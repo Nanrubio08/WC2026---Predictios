@@ -62,21 +62,21 @@ const scoringRows = [
   { result: 'Predicción incorrecta', example: 'Eliges 2-1 · Final 1-1 (empate)', points: 0, width: '0%', color: '#5B6E8C', glow: 'transparent' },
 ];
 
-const goldenBallRow = { result: '🏆 Balón de Oro', example: 'Eliges el campeón del torneo', points: 30, width: '100%', color: '#FFD700', glow: 'rgba(255,215,0,0.4)' };
+const goldenBallRow = { result: '🏆 Gol de Oro', example: 'Eliges el campeón del torneo', points: 30, width: '100%', color: '#FFD700', glow: 'rgba(255,215,0,0.4)' };
 
 const faqs = [
   { q: '¿Cuándo se cierran las predicciones?', a: '30 minutos antes del horario oficial del partido. Después de eso, el formulario desaparece y no se aceptan cambios.' },
   { q: '¿Puedo modificar mi predicción?', a: 'Sí, todas las veces que quieras hasta que se cierre la ventana de predicción.' },
   { q: '¿Cuándo se asignan los puntos?', a: 'Automáticamente una vez que el partido finaliza y se confirma el marcador final.' },
   { q: '¿Qué cuenta como resultado correcto?', a: 'Victoria local, victoria visitante o empate — según el resultado a los 90 minutos. No se tienen en cuenta el alargue ni los penaltis.' },
-  { q: '¿Qué es el Balón de Oro?', a: 'Una predicción especial: eliges que selección ganará el Mundial 2026. Si aciertas, sumas 30 puntos bonus de golpe. Puedes cambiar tu elección hasta el 17 de junio a las 23:59. Después de esa fecha queda bloqueada.' },
+  { q: '¿Qué es el Gol de Oro?', a: 'Una predicción especial: eliges que selección ganará el Mundial 2026. Si aciertas, sumas 30 puntos bonus de golpe. Puedes cambiar tu elección hasta el 17 de junio a las 23:59. Después de esa fecha queda bloqueada.' },
 ];
 
 const stats = [
   { value: '72', label: 'Partidos de grupo' },
   { value: '48', label: 'Selecciones' },
   { value: '3', label: 'Países anfitriones' },
-  { value: '5', label: 'Pts · Marcador exacto' },
+  { value: '5', label: 'Puntos por Marcador exacto' },
 ];
 
 function WC2026SVGLogo() {

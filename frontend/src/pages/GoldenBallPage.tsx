@@ -69,7 +69,7 @@ export default function GoldenBallPage() {
         </p>
         <h1 className="mb-2 leading-none"
           style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 8vw, 4rem)', color: '#E8EDF5', textTransform: 'uppercase' }}>
-          BALÓN <span className="text-gold-shimmer">DE ORO</span>
+          GOL <span className="text-gold-shimmer">DE ORO</span>
         </h1>
         <p className="text-wc-muted text-sm">Una predicción extra que puede marcar la diferencia</p>
       </div>
@@ -143,7 +143,7 @@ export default function GoldenBallPage() {
                   className="w-full rounded-lg px-3 py-2.5 text-sm font-semibold text-wc-text focus:outline-none"
                   style={{ background: '#0D1829', border: `1px solid ${selected ? 'rgba(245,166,35,0.3)' : '#152136'}`, fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}
                 >
-                  <option value="">— Elegí un equipo —</option>
+                  <option value="">— Elige un equipo —</option>
                   {WC_TEAMS.map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}
