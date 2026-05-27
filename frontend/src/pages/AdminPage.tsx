@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminLeaderboardExportUrl, adminGetBonusConfig, adminDeclareWinner } from '../services/api';
+import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminLeaderboardExportUrl, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminDeleteUser } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { Match, AuditLog } from '../types';
 
@@ -154,13 +154,91 @@ function GoldenBallAdmin() {
   );
 }
 
+function UsersAdmin() {
+  type UserRow = { id: string; username: string; name: string | null; email: string; createdAt: string };
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    adminFetchUsers()
+      .then(setUsers)
+      .catch(() => setError('Error al cargar usuarios'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleDelete(user: UserRow) {
+    const confirmed = window.confirm(`¿Eliminar al usuario "${user.username}"? Se borrarán todas sus predicciones y su entrada en el ranking. Esta acción es irreversible.`);
+    if (!confirmed) return;
+    setDeletingId(user.id);
+    setError(null);
+    try {
+      await adminDeleteUser(user.id);
+      setUsers((prev) => prev.filter((u) => u.id !== user.id));
+    } catch (err: any) {
+      setError(err?.response?.data?.error ?? 'Error al eliminar usuario');
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  if (loading) return <div className="animate-pulse h-24 rounded-xl" style={{ background: 'rgba(21,33,54,0.6)' }} />;
+
+  return (
+    <div className="card overflow-hidden">
+      {error && <div className="px-4 py-3 text-sm text-red-400 border-b" style={{ borderColor: 'rgba(21,33,54,0.8)', fontFamily: 'Barlow Condensed, sans-serif' }}>{error}</div>}
+      <div className="px-4 py-3 text-xs text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>
+        {users.length} usuario{users.length !== 1 ? 's' : ''} registrados
+      </div>
+      {users.length === 0 ? (
+        <div className="py-12 text-center text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>No hay usuarios registrados.</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(21,33,54,0.8)', background: 'rgba(245,166,35,0.04)' }}>
+                {['USUARIO', 'NOMBRE', 'EMAIL', 'REGISTRO', 'ACCIÓN'].map((h) => (
+                  <th key={h} className="py-3 px-4 text-left text-xs font-bold text-wc-muted"
+                    style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id} style={{ borderBottom: '1px solid rgba(21,33,54,0.5)' }}>
+                  <td className="py-3 px-4 text-xs font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>{u.username}</td>
+                  <td className="py-3 px-4 text-xs text-wc-muted">{u.name ?? '—'}</td>
+                  <td className="py-3 px-4 text-xs text-wc-dim font-mono">{u.email}</td>
+                  <td className="py-3 px-4 text-xs text-wc-muted tabular-nums" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    {new Date(u.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' })}
+                  </td>
+                  <td className="py-3 px-4">
+                    <button
+                      onClick={() => handleDelete(u)}
+                      disabled={deletingId === u.id}
+                      className="rounded px-3 py-1 text-xs font-bold uppercase"
+                      style={{ background: 'rgba(240,62,62,0.12)', border: '1px solid rgba(240,62,62,0.3)', color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em', opacity: deletingId === u.id ? 0.5 : 1 }}>
+                      {deletingId === u.id ? '...' : 'ELIMINAR'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { user, isAuthenticated } = useAuthToken();
   const navigate = useNavigate();
   const [matches, setMatches] = useState<Match[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'matches' | 'audit' | 'bonus'>('matches');
+  const [tab, setTab] = useState<'matches' | 'audit' | 'bonus' | 'users'>('matches');
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') { navigate('/'); return; }
@@ -192,6 +270,7 @@ export default function AdminPage() {
         <button className={pillBase} style={tab === 'matches' ? activeStyle : inactiveStyle} onClick={() => setTab('matches')}>Partidos</button>
         <button className={pillBase} style={tab === 'audit' ? activeStyle : inactiveStyle} onClick={() => setTab('audit')}>Audit Log</button>
         <button className={pillBase} style={tab === 'bonus' ? activeStyle : inactiveStyle} onClick={() => setTab('bonus')}>🏆 Balón de Oro</button>
+        <button className={pillBase} style={tab === 'users' ? activeStyle : inactiveStyle} onClick={() => setTab('users')}>👥 Usuarios</button>
         <a
           href={adminLeaderboardExportUrl()}
           className={`${pillBase} no-underline`}
@@ -205,6 +284,8 @@ export default function AdminPage() {
       {loading && <div className="space-y-3">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="card animate-pulse h-16" />)}</div>}
 
       {!loading && tab === 'bonus' && <GoldenBallAdmin />}
+
+      {!loading && tab === 'users' && <UsersAdmin />}
 
       {!loading && tab === 'matches' && (
         <div className="card overflow-hidden">

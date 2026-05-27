@@ -138,3 +138,12 @@ export async function adminDeclareWinner(winner: string): Promise<{ winner: stri
   const res = await api.post('/api/admin/bonus/winner', { winner });
   return res.data;
 }
+
+export async function adminFetchUsers(): Promise<{ id: string; username: string; name: string | null; email: string; createdAt: string }[]> {
+  const res = await api.get('/api/admin/users');
+  return res.data;
+}
+
+export async function adminDeleteUser(userId: string): Promise<void> {
+  await api.delete(`/api/admin/users/${userId}`);
+}

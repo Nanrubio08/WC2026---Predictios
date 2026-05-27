@@ -7,6 +7,7 @@ export interface UserInfo {
   id: string;
   username: string;
   name: string | null;
+  isAdmin: boolean;
 }
 
 export async function getUsersByIds(userIds: string[]): Promise<UserInfo[]> {

@@ -16,3 +16,10 @@ export async function provisionUserLeaderboard(userId: string): Promise<void> {
     }
   );
 }
+
+export async function deleteUserData(userId: string): Promise<void> {
+  await axios.delete(`${PREDICTIONS_URL}/internal/users/${userId}`, {
+    headers: { 'x-internal-token': INTERNAL_TOKEN },
+    timeout: 10000,
+  });
+}
