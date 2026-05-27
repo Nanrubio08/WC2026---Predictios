@@ -12,7 +12,7 @@ interface Props {
 
 function WC2026Badge() {
   return (
-    <img src="/images/logo.png" alt="minuto90.site logo" style={{ width: 38, height: 38, objectFit: 'contain' }} />
+    <img src="/images/logo.png" alt="minuto90.site logo" style={{ width: 38, height: 38, objectFit: 'contain', borderRadius: '50%' }} />
   );
 }
 
