@@ -62,22 +62,17 @@ if [ ! -f "certbot/conf/options-ssl-nginx.conf" ]; then
   echo "  Done."
 fi
 
-# ── Create a temporary self-signed cert so Nginx can start ────────────────────
-echo "→ Creating temporary self-signed certificate..."
-openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
-  -keyout "certbot/conf/live/$DOMAIN/privkey.pem" \
-  -out    "certbot/conf/live/$DOMAIN/fullchain.pem" \
-  -subj   "/CN=localhost" 2>/dev/null
-echo "  Done."
-
-# ── Start only the Nginx container (backends not needed for cert issuance) ────
-echo "→ Starting Nginx (HTTP only for ACME challenge)..."
-docker compose -f "$COMPOSE_FILE" up -d --no-deps worldcup-frontend
-sleep 3
-
-# ── Delete the dummy cert ─────────────────────────────────────────────────────
-echo "→ Removing dummy certificate..."
-rm -rf certbot/conf/live certbot/conf/renewal certbot/conf/archive
+# ── Start a minimal bootstrap Nginx (no proxy_pass — backends not needed) ────
+# We use plain `docker run` so we can mount a simple config without any
+# upstream references that would fail to resolve when backends aren't running.
+echo "→ Starting bootstrap Nginx (HTTP only for ACME challenge)..."
+docker run --rm -d \
+  --name nginx-certbot-bootstrap \
+  -p 80:80 \
+  -v "$(pwd)/certbot/www:/var/www/certbot:ro" \
+  -v "$(pwd)/frontend/nginx/bootstrap.conf:/etc/nginx/conf.d/default.conf:ro" \
+  nginx:alpine
+sleep 2
 
 # ── Request the real certificate ─────────────────────────────────────────────
 echo "→ Requesting Let's Encrypt certificate..."
@@ -93,9 +88,9 @@ docker compose -f "$COMPOSE_FILE" run --rm --entrypoint certbot certbot certonly
   --no-eff-email \
   --force-renewal
 
-# ── Reload Nginx with the real cert ──────────────────────────────────────────
-echo "→ Reloading Nginx with the real certificate..."
-docker compose -f "$COMPOSE_FILE" exec worldcup-frontend nginx -s reload
+# ── Stop bootstrap Nginx ──────────────────────────────────────────────────────
+echo "→ Stopping bootstrap Nginx..."
+docker stop nginx-certbot-bootstrap 2>/dev/null || true
 
 echo ""
 echo "════════════════════════════════════════════"
