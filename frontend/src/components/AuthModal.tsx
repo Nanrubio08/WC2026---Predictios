@@ -11,6 +11,7 @@ interface Props {
 export default function AuthModal({ onSuccess, onClose }: Props) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [form, setForm] = useState({ name: '', username: '', email: '', password: '' });
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<string, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -29,6 +30,7 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    setFieldErrors((fe) => ({ ...fe, [e.target.name]: undefined }));
     setError(null);
   }
 
@@ -42,7 +44,16 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
         : await registerUser({ name: form.name, username: form.username, email: form.email, password: form.password });
       onSuccess(result.token, result.user);
     } catch (err: any) {
-      setError(err?.response?.data?.error ?? 'Something went wrong');
+      const data = err?.response?.data;
+      const msg = data?.error ?? 'Something went wrong';
+      const field = data?.field;
+      if (field) {
+        setFieldErrors({ [field]: msg });
+        setError(null);
+      } else {
+        setError(msg);
+        setFieldErrors({});
+      }
     } finally {
       setLoading(false);
     }
@@ -78,7 +89,7 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
             {(['login', 'register'] as const).map((m) => (
               <button
                 key={m}
-                onClick={() => { setMode(m); setError(null); }}
+                onClick={() => { setMode(m); setError(null); setFieldErrors({}); }}
                 className="flex-1 rounded-lg py-2 text-sm font-bold transition-all"
                 style={mode === m ? {
                   background: 'linear-gradient(135deg, #F5A623 0%, #E8920F 100%)',
@@ -104,20 +115,26 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
               <div>
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-wc-muted"
                   style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.12em' }}>Nombre completo</label>
-                <input name="name" value={form.name} onChange={handleChange} placeholder="Tu nombre" required className="input" />
+                <input name="name" value={form.name} onChange={handleChange} placeholder="Tu nombre" required minLength={5} className="input"
+                  style={fieldErrors.name ? { borderColor: 'rgba(240,62,62,0.7)', boxShadow: '0 0 0 2px rgba(240,62,62,0.15)' } : undefined} />
+                {fieldErrors.name && <p className="mt-1 text-xs" style={{ color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif' }}>⚠ {fieldErrors.name}</p>}
               </div>
             )}
             {mode === 'register' && (
               <div>
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-wc-muted"
                   style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.12em' }}>Nombre de usuario</label>
-                <input name="username" value={form.username} onChange={handleChange} placeholder="tu_usuario" required className="input" />
+                <input name="username" value={form.username} onChange={handleChange} placeholder="tu_usuario" required className="input"
+                  style={fieldErrors.username ? { borderColor: 'rgba(240,62,62,0.7)', boxShadow: '0 0 0 2px rgba(240,62,62,0.15)' } : undefined} />
+                {fieldErrors.username && <p className="mt-1 text-xs" style={{ color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif' }}>⚠ {fieldErrors.username}</p>}
               </div>
             )}
             <div>
               <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-wc-muted"
                 style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.12em' }}>Correo electrónico</label>
-              <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="vos@ejemplo.com" required className="input" />
+              <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="vos@ejemplo.com" required className="input"
+                style={fieldErrors.email ? { borderColor: 'rgba(240,62,62,0.7)', boxShadow: '0 0 0 2px rgba(240,62,62,0.15)' } : undefined} />
+              {fieldErrors.email && <p className="mt-1 text-xs" style={{ color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif' }}>⚠ {fieldErrors.email}</p>}
             </div>
             <div>
               <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-wc-muted"
@@ -127,7 +144,9 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
                 placeholder={mode === 'register' ? 'Mínimo 8 caracteres' : '••••••••'}
                 required minLength={mode === 'register' ? 8 : undefined}
                 className="input"
+                style={fieldErrors.password ? { borderColor: 'rgba(240,62,62,0.7)', boxShadow: '0 0 0 2px rgba(240,62,62,0.15)' } : undefined}
               />
+              {fieldErrors.password && <p className="mt-1 text-xs" style={{ color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif' }}>⚠ {fieldErrors.password}</p>}
             </div>
 
             {error && (

@@ -8,16 +8,22 @@ import { provisionUserLeaderboard } from '../clients/predictionsClient';
 const prisma = new PrismaClient();
 
 const RegisterSchema = z.object({
-  name: z.string().min(2).max(80),
-  username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers and underscores'),
-  email: z.string().email(),
-  password: z.string().min(8).max(128),
+  name: z.string().min(5, 'El nombre debe tener al menos 5 caracteres').max(80, 'El nombre es demasiado largo'),
+  username: z
+    .string()
+    .min(3, 'El usuario debe tener al menos 3 caracteres')
+    .max(30, 'El usuario es demasiado largo')
+    .regex(/^[a-zA-Z0-9_]+$/, 'El usuario solo puede contener letras, números y guiones bajos (sin espacios)'),
+  email: z.string().email('Ingresá un correo electrónico válido'),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').max(128, 'La contraseña es demasiado larga'),
 });
 
 export async function registerController(req: Request, res: Response): Promise<void> {
   const parsed = RegisterSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.issues[0].message });
+    const issue = parsed.error.issues[0];
+    const field = issue.path[0] as string | undefined;
+    res.status(400).json({ error: issue.message, field });
     return;
   }
 
@@ -28,7 +34,11 @@ export async function registerController(req: Request, res: Response): Promise<v
   });
 
   if (existing) {
-    res.status(409).json({ error: 'username or email already taken' });
+    if (existing.username === username) {
+      res.status(409).json({ error: 'Ese nombre de usuario ya está en uso', field: 'username' });
+    } else {
+      res.status(409).json({ error: 'Ese correo ya está registrado', field: 'email' });
+    }
     return;
   }
 

@@ -59,7 +59,7 @@ const steps = [
 const scoringRows = [
   { result: 'Marcador exacto', example: 'Eliges 2-1 · Final 2-1', points: 5, width: '100%', color: '#F5A623', glow: 'rgba(245,166,35,0.3)' },
   { result: 'Resultado correcto', example: 'Eliges 2-1 · Final 3-1 (local gana)', points: 3, width: '60%', color: '#00C87A', glow: 'rgba(0,200,122,0.3)' },
-  { result: 'Predicción incorrecta', example: 'Eliges 2-1 · Final 1-1 (empate)', points: 0, width: '0%', color: '#5B6E8C', glow: 'transparent' },
+  { result: 'Predicción incorrecta', example: 'Eliges 2-1 · Final 1-1 (empate)', points: 0, width: '0%', color: '#a00404', glow: 'transparent' },
 ];
 
 const goldenBallRow = { result: '🏆 Gol de Oro', example: 'Eliges el campeón del torneo', points: 30, width: '100%', color: '#FFD700', glow: 'rgba(255,215,0,0.4)' };
@@ -114,10 +114,10 @@ export default function HomePage() {
           <h1 className="animate-fade-in-up delay-300 mb-3 leading-none text-shadow-gold"
             style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 'clamp(4rem, 12vw, 8rem)', color: '#E8EDF5', textTransform: 'uppercase', letterSpacing: '-0.01em' }}>
             MUNDIAL DE<br />
-            <span className="text-gold-shimmer">FUTBOL 2026</span>
+            <span className="text-gold-shimmer">FÚTBOL 2026</span>
           </h1>
 
-          <p className="animate-fade-in-up delay-400 mx-auto mb-8 max-w-lg text-lg font-medium text-wc-muted sm:text-xl" style={{ fontFamily: 'Barlow, sans-serif' }}>
+          <p className="animate-fade-in-up delay-400 mx-auto mb-8 max-w-lg text-lg font-medium text-white sm:text-xl" style={{ fontFamily: 'Barlow, sans-serif' }}>
             Predice el marcador. Gánate la gloria.<br className="hidden sm:block" />
             Compite con tus amigos en la tabla de posiciones en vivo.
           </p>
@@ -203,7 +203,7 @@ export default function HomePage() {
             <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(4,7,14,0.5) 0%, transparent 60%)' }} />
             <div className="absolute bottom-4 left-4">
               <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F5A623', letterSpacing: '0.2em' }}>El Futbol nos une</div>
-              <div className="text-xl font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>Juntos por una pasión</div>
+              <div className="text-xl font-bold uppercase text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>JUNTOS POR UNA PASIÓN</div>
             </div>
           </div>
           {/* Top right */}
@@ -229,7 +229,6 @@ export default function HomePage() {
       {/* ── Scoring system ── */}
       <section className="px-2 space-y-7">
         <div className="text-center">
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.2em' }}>Sistema de puntos</p>
           <h2 className="leading-none" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: 'clamp(2.5rem, 6vw, 3.5rem)', color: '#E8EDF5', textTransform: 'uppercase' }}>
             SISTEMA DE <span className="text-gold-shimmer">PUNTOS</span>
           </h2>
@@ -238,7 +237,7 @@ export default function HomePage() {
 
         <div className="overflow-hidden rounded-2xl" style={{ border: '1px solid #152136' }}>
           {/* Header */}
-          <div className="grid grid-cols-3 px-6 py-3 text-xs font-bold uppercase tracking-widest text-wc-dim" style={{ background: '#0D1829', borderBottom: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.15em' }}>
+          <div className="grid grid-cols-3 px-6 py-3 font-bold uppercase tracking-widest text-white" style={{ background: '#0D1829', borderBottom: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.15em' }}>
             <span>Escenario</span>
             <span className="hidden sm:block">Ejemplo</span>
             <span className="text-right">Puntos</span>
