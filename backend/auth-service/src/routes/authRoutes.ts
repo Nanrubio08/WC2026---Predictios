@@ -2,6 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { registerController } from '../controllers/registerController';
 import { loginController } from '../controllers/loginController';
+import { googleAuthController } from '../controllers/googleAuthController';
 import { refreshController } from '../controllers/refreshController';
 import { logoutController } from '../controllers/logoutController';
 import { getProfileController } from '../controllers/getProfileController';
@@ -38,6 +39,13 @@ router.post('/register', registerLimiter, (req, res) => {
 router.post('/login', loginLimiter, (req, res) => {
   loginController(req, res).catch((err) => {
     console.error('login error', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+});
+
+router.post('/google', loginLimiter, (req, res) => {
+  googleAuthController(req, res).catch((err) => {
+    console.error('google auth error', err);
     res.status(500).json({ error: 'Internal server error' });
   });
 });

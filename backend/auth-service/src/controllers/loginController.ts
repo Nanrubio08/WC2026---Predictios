@@ -29,6 +29,11 @@ export async function loginController(req: Request, res: Response): Promise<void
     return;
   }
 
+  if (!user.passwordHash) {
+    res.status(400).json({ error: 'This account uses Google Sign-In. Please sign in with Google.' });
+    return;
+  }
+
   const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) {
     res.status(401).json({ error: 'Invalid credentials' });

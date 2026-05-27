@@ -26,6 +26,11 @@ export async function changePasswordController(req: AuthenticatedRequest, res: R
     return;
   }
 
+  if (!user.passwordHash) {
+    res.status(400).json({ error: 'This account uses Google Sign-In and has no password.' });
+    return;
+  }
+
   const valid = await verifyPassword(currentPassword, user.passwordHash);
   if (!valid) {
     res.status(401).json({ error: 'Current password is incorrect' });

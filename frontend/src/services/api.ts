@@ -46,6 +46,11 @@ export async function loginUser(data: { email: string; password: string }): Prom
   return res.data;
 }
 
+export async function googleAuth(credential: string): Promise<{ token: string; user: User }> {
+  const res = await api.post<{ token: string; user: User }>('/api/auth/google', { credential });
+  return res.data;
+}
+
 export async function logoutUser(): Promise<void> {
   await api.post('/api/auth/logout');
 }

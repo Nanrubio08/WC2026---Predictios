@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { registerUser, loginUser } from '../services/api';
+import { GoogleLogin } from '@react-oauth/google';
+import { registerUser, loginUser, googleAuth } from '../services/api';
 import type { User } from '../types';
 
 interface Props {
@@ -12,6 +13,19 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
   const [form, setForm] = useState({ name: '', username: '', email: '', password: '' });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  async function handleGoogleSuccess(credential: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await googleAuth(credential);
+      onSuccess(result.token, result.user);
+    } catch (err: any) {
+      setError(err?.response?.data?.error ?? 'Google sign-in failed');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -135,6 +149,24 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
               )}
             </button>
           </form>
+
+          {/* Google Sign-In */}
+          <div className="mt-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1 h-px" style={{ background: 'rgba(245,166,35,0.15)' }} />
+              <span className="text-xs text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>o continúa con</span>
+              <div className="flex-1 h-px" style={{ background: 'rgba(245,166,35,0.15)' }} />
+            </div>
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={(res) => { if (res.credential) handleGoogleSuccess(res.credential); }}
+                onError={() => setError('Google sign-in was cancelled or failed')}
+                theme="filled_black"
+                shape="rectangular"
+                width="368"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
