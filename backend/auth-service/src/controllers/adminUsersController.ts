@@ -1,9 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { AdminRequest } from '../middleware/requireAdmin';
 import { deleteUserData } from '../clients/predictionsClient';
 
-const prisma = new PrismaClient();
 
 export async function listUsersController(_req: AdminRequest, res: Response): Promise<void> {
   const users = await prisma.user.findMany({

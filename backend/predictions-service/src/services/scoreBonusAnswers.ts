@@ -1,6 +1,6 @@
-import { Prisma, PrismaClient } from '../generated/client';
+import { Prisma } from '../generated/client';
+import prisma from '../prisma';
 
-const prisma = new PrismaClient();
 
 const BONUS_POINTS = 30;
 

@@ -220,12 +220,13 @@
 
 /* ── Ticker tape ── */
 @keyframes ticker {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
 }
 .ticker-track {
-  animation: ticker 10s linear infinite;
+  animation: ticker 20s linear infinite;
   white-space: nowrap;
+  will-change: transform;
 }
 
 /* ── Scrollbar ── */

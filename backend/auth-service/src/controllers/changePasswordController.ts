@@ -1,10 +1,9 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { z } from 'zod';
 import { verifyPassword, hashPassword } from '../utils/password';
 import { AuthenticatedRequest } from '../middleware/authenticateJwt';
 
-const prisma = new PrismaClient();
 
 const ChangePasswordSchema = z.object({
   currentPassword: z.string().min(1),

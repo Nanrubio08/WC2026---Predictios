@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { z } from 'zod';
 import { verifyPassword } from '../utils/password';
 import { signToken, generateRefreshToken } from '../utils/jwt';
 
-const prisma = new PrismaClient();
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 

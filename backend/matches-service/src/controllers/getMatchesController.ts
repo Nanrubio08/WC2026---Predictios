@@ -1,9 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authenticateJwt';
 import { getUserPredictions } from '../clients/predictionsClient';
 
-const prisma = new PrismaClient();
 
 type MatchRecord = {
   id: number;

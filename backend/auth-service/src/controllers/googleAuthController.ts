@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { signToken, generateRefreshToken } from '../utils/jwt';
 import { provisionUserLeaderboard } from '../clients/predictionsClient';
 import { claimInviteCode } from '../utils/inviteCodes';
 
-const prisma = new PrismaClient();
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function getClient(): OAuth2Client {

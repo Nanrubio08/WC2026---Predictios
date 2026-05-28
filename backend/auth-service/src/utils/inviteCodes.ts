@@ -1,6 +1,6 @@
 import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 
-const prisma = new PrismaClient();
 
 /** Validates and atomically claims an invite code within an existing transaction. */
 export async function claimInviteCode(

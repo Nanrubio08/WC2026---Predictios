@@ -1,10 +1,9 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { z } from 'zod';
 import { scoreBonusAnswers } from '../services/scoreBonusAnswers';
 import { AdminRequest } from '../middleware/requireAdmin';
 
-const prisma = new PrismaClient();
 
 const WinnerSchema = z.object({
   winner: z.string().min(1).max(100),

@@ -1,16 +1,15 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/authenticateJwt';
 
-const prisma = new PrismaClient();
 
-// Accept base64 data URIs (jpeg/png/webp), max ~1MB base64 ≈ 750KB image
+// Accept base64 data URIs (jpeg/png/webp), max ~8MB base64 ≈ 6MB image
 const AvatarSchema = z.object({
   avatar: z
     .string()
     .regex(/^data:image\/(jpeg|png|webp);base64,/, 'Must be a base64 image (jpeg/png/webp)')
-    .max(1_400_000, 'Image must be under 1 MB'),
+    .max(11_000_000, 'Image must be under 8 MB'),
 });
 
 export async function uploadAvatarController(req: AuthenticatedRequest, res: Response): Promise<void> {

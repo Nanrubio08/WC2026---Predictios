@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import NextMatchBanner from '../components/NextMatchBanner';
 
 const STADIUM_IMG   = '/images/equipos.jpg';
 const STADIUM_NIGHT = '/images/copa_4.jpg';
@@ -88,7 +89,7 @@ const stats = [
 //}
 
 export default function HomePage() {
-  const tickerContent = [...tickerItems, ...tickerItems];
+  const tickerContent = [...tickerItems, ...tickerItems, ...tickerItems];
 
   return (
     <div className="mx-auto max-w-5xl space-y-0">
@@ -151,9 +152,9 @@ export default function HomePage() {
         {/* Bottom fade */}
         <div className="absolute bottom-0 left-0 right-0 h-24" style={{ background: 'linear-gradient(to bottom, transparent, #04070E)' }} />
       </section>
-
+<br />
       {/* ── Ticker tape ── */}
-      <div className="overflow-hidden py-4" style={{ background: 'rgba(245,166,35,0.06)', borderTop: '1px solid rgba(245,166,35,0.12)', borderBottom: '1px solid rgba(245,166,35,0.12)' }}>
+      <div className="overflow-hidden py-4 mx-2 sm:mx-0" style={{ background: 'rgba(245,166,35,0.06)', border: '1px solid rgba(245,166,35,0.12)', borderRadius: 16 }}>
         <div className="ticker-track flex gap-12 px-4">
           {tickerContent.map((item, i) => (
             <span key={i} className="shrink-0 text-sm font-semibold" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#F5A623', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -161,6 +162,11 @@ export default function HomePage() {
             </span>
           ))}
         </div>
+      </div>
+<br />
+      {/* ── Next match banner (mobile only) ── */}
+      <div className="mx-2 sm:mx-0" style={{ borderRadius: 16, overflow: 'hidden' }}>
+        <NextMatchBanner />
       </div>
 
       {/* ── How it works ── */}
@@ -285,6 +291,108 @@ export default function HomePage() {
                 +30 PTS
               </span>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Prizes ── */}
+      <section className="px-2 pt-14 space-y-7">
+        <div className="text-center">
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.2em' }}>Top 3 al final del torneo</p>
+          <h2 className="leading-none" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: 'clamp(2.5rem, 6vw, 3.5rem)', color: '#E8EDF5', textTransform: 'uppercase' }}>
+            PREMIOS <span className="text-gold-shimmer">FINALES</span>
+          </h2>
+        </div>
+
+        {/* Reveal notice banner */}
+        <div className="rounded-2xl px-6 py-5 space-y-3"
+          style={{ background: 'rgba(245,166,35,0.06)', border: '1px solid rgba(245,166,35,0.2)' }}>
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-xl">📅</span>
+            <p style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1rem', color: '#F5A623', letterSpacing: '0.04em', fontWeight: 700 }}>
+              Los montos serán revelados el día que inicie el torneo · <span className="text-wc-muted font-normal">11 de Junio 2026</span>
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-base">👥</span>
+            <p className="text-sm text-wc-muted text-center" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.95rem', letterSpacing: '0.04em' }}>
+              Los premios dependen del número de participantes inscritos al inicio del torneo — <span style={{ color: '#F5A623' }}>¡entre más jugadores, mayores serán los premios!</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-3">
+          {/* 2nd place */}
+          <div className="card-pitch group relative overflow-hidden flex flex-col items-center gap-4 py-8 transition-all duration-300 hover:-translate-y-1 order-2 sm:order-1"
+            style={{ border: '1px solid rgba(192,192,192,0.25)' }}>
+            <div className="absolute -top-4 -right-4 select-none leading-none"
+              style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '5rem', color: 'rgba(192,192,192,0.05)', fontWeight: 900 }}>
+              2
+            </div>
+            <div className="text-4xl">🥈</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: '1.4rem', color: '#C0C0C0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              2.º Lugar
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs font-bold uppercase tracking-widest text-wc-dim"
+                style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.18em' }}>Premio</span>
+              <span className="flex items-center gap-2 rounded-full px-4 py-1.5 text-lg font-black"
+                style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.5rem', color: '#C0C0C0', background: 'rgba(192,192,192,0.08)', border: '1px solid rgba(192,192,192,0.2)' }}>
+                🔒 Por revelar
+              </span>
+            </div>
+            <p className="text-center text-xs text-wc-dim px-4" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
+              Premio revelado el inicio del torneo
+            </p>
+          </div>
+
+          {/* 1st place — center / highlighted */}
+          <div className="card-pitch group relative overflow-hidden flex flex-col items-center gap-4 py-10 transition-all duration-300 hover:-translate-y-2 order-1 sm:order-2"
+            style={{ border: '1px solid rgba(255,215,0,0.4)', background: 'rgba(255,215,0,0.03)', boxShadow: '0 0 32px rgba(255,215,0,0.08)' }}>
+            <div className="absolute -top-4 -right-4 select-none leading-none"
+              style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '5rem', color: 'rgba(255,215,0,0.07)', fontWeight: 900 }}>
+              1
+            </div>
+            {/* Top badge */}
+            <div className="text-5xl mt-2">🥇</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: '1.6rem', color: '#FFD700', textTransform: 'uppercase', letterSpacing: '0.05em', textShadow: '0 0 16px rgba(255,215,0,0.4)' }}>
+              1.er Lugar
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs font-bold uppercase tracking-widest text-wc-dim"
+                style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.18em' }}>Gran Premio</span>
+              <span className="flex items-center gap-2 rounded-full px-5 py-2 text-lg font-black"
+                style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.6rem', color: '#FFD700', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.35)', textShadow: '0 0 12px rgba(255,215,0,0.5)' }}>
+                🔒 Por revelar
+              </span>
+            </div>
+            <p className="text-center text-xs text-wc-dim px-4" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
+              Premio revelado el inicio del torneo
+            </p>
+          </div>
+
+          {/* 3rd place */}
+          <div className="card-pitch group relative overflow-hidden flex flex-col items-center gap-4 py-8 transition-all duration-300 hover:-translate-y-1 order-3"
+            style={{ border: '1px solid rgba(205,127,50,0.25)' }}>
+            <div className="absolute -top-4 -right-4 select-none leading-none"
+              style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '5rem', color: 'rgba(205,127,50,0.05)', fontWeight: 900 }}>
+              3
+            </div>
+            <div className="text-4xl">🥉</div>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, fontSize: '1.4rem', color: '#CD7F32', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              3.er Lugar
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-xs font-bold uppercase tracking-widest text-wc-dim"
+                style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.18em' }}>Premio</span>
+              <span className="flex items-center gap-2 rounded-full px-4 py-1.5 text-lg font-black"
+                style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.5rem', color: '#CD7F32', background: 'rgba(205,127,50,0.08)', border: '1px solid rgba(205,127,50,0.2)' }}>
+                🔒 Por revelar
+              </span>
+            </div>
+            <p className="text-center text-xs text-wc-dim px-4" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
+              Premio revelado el inicio del torneo
+            </p>
           </div>
         </div>
       </section>

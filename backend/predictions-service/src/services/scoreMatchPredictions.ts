@@ -1,7 +1,7 @@
-import { Prisma, PrismaClient } from '../generated/client';
+import { Prisma } from '../generated/client';
+import prisma from '../prisma';
 import { calculatePoints } from './calculatePoints';
 
-const prisma = new PrismaClient();
 
 export async function scoreMatchPredictions(
   matchId: number,

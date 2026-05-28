@@ -1,9 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { AdminRequest } from '../middleware/requireAdmin';
 import { generateCodes } from '../utils/inviteCodes';
 
-const prisma = new PrismaClient();
 
 export async function generateCodesController(req: AdminRequest, res: Response): Promise<void> {
   const count = Number(req.body?.count);

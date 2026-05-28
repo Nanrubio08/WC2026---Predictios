@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 
-const prisma = new PrismaClient();
 
 export async function getMatchByIdController(req: Request, res: Response): Promise<void> {
   const id = parseInt(req.params.id, 10);

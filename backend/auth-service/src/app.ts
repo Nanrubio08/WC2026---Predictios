@@ -17,7 +17,7 @@ app.set('trust proxy', 1); // trust Nginx reverse proxy for X-Forwarded-For
 const PORT = process.env.PORT ?? 3001;
 
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '12mb' }));
 app.use(cookieParser());
 
 app.use('/health', healthRouter);

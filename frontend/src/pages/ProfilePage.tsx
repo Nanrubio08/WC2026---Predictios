@@ -167,8 +167,8 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1_000_000) {
-      setAvatarStatus({ kind: 'error', msg: 'La imagen debe pesar menos de 1 MB.' });
+    if (file.size > 8_000_000) {
+      setAvatarStatus({ kind: 'error', msg: 'La imagen debe pesar menos de 8 MB.' });
       return;
     }
 

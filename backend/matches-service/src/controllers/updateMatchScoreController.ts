@@ -1,10 +1,9 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { z } from 'zod';
 import { triggerScoring } from '../clients/scoringClient';
 import { AdminRequest } from '../middleware/requireAdmin';
 
-const prisma = new PrismaClient();
 
 const UpdateScoreSchema = z.object({
   homeScoreActual: z.number().int().min(0).max(99),

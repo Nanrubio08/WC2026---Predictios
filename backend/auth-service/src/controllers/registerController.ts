@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { z } from 'zod';
 import { hashPassword } from '../utils/password';
 import { signToken } from '../utils/jwt';
 import { provisionUserLeaderboard } from '../clients/predictionsClient';
 import { claimInviteCode } from '../utils/inviteCodes';
 
-const prisma = new PrismaClient();
 
 const RegisterSchema = z.object({
   name: z.string().min(5, 'El nombre debe tener al menos 5 caracteres').max(80, 'El nombre es demasiado largo'),

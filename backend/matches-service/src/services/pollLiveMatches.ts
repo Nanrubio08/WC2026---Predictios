@@ -1,8 +1,7 @@
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { fetchLiveFixtures } from '../utils/apiFootball';
 import { triggerScoring } from '../clients/scoringClient';
 
-const prisma = new PrismaClient();
 
 const COMPETITION = process.env.FOOTBALL_COMPETITION ?? 'WC';
 

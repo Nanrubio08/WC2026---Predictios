@@ -1,6 +1,5 @@
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 
-const prisma = new PrismaClient();
 
 export interface LeaderboardEntry {
   userId: string;

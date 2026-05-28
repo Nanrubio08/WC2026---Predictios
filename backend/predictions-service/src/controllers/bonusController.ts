@@ -1,9 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/authenticateJwt';
 
-const prisma = new PrismaClient();
 
 export const BONUS_QUESTION = '¿Quién ganará el Mundial 2026?';
 

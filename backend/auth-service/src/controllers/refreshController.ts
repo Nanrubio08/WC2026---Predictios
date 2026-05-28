@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { signToken } from '../utils/jwt';
 
-const prisma = new PrismaClient();
 
 export async function refreshController(req: Request, res: Response): Promise<void> {
   const refreshTokenValue = req.cookies?.refreshToken as string | undefined;

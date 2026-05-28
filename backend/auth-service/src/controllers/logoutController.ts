@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 
-const prisma = new PrismaClient();
 
 export async function logoutController(req: Request, res: Response): Promise<void> {
   const refreshTokenValue = req.cookies?.refreshToken as string | undefined;

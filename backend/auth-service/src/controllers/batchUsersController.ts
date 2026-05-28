@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
 
 const BatchUsersSchema = z.object({
   userIds: z.array(z.string().uuid()).min(1).max(200),

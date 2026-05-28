@@ -1,7 +1,6 @@
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { fetchFixtures, FDMatch } from '../utils/apiFootball';
 
-const prisma = new PrismaClient();
 
 const COMPETITION = process.env.FOOTBALL_COMPETITION ?? 'WC';
 const SEASON = parseInt(process.env.FOOTBALL_SEASON ?? '2026', 10);

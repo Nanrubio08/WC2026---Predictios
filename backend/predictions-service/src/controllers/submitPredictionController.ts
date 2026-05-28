@@ -1,9 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/authenticateJwt';
 
-const prisma = new PrismaClient();
 
 const SubmitPredictionSchema = z.object({
   matchId: z.number().int().positive(),

@@ -1,8 +1,7 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authenticateJwt';
 
-const prisma = new PrismaClient();
 
 export async function getProfileController(req: AuthenticatedRequest, res: Response): Promise<void> {
   const user = await prisma.user.findUnique({

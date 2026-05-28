@@ -1,9 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient } from '../generated/client';
+import prisma from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authenticateJwt';
 import { getAllMatches, MatchInfo } from '../clients/matchesClient';
 
-const prisma = new PrismaClient();
 
 export async function getMyPredictionsController(req: AuthenticatedRequest, res: Response): Promise<void> {
   const userId = req.userId!;
