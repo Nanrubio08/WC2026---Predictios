@@ -4,6 +4,7 @@ import { updateMatchScoreController } from '../controllers/updateMatchScoreContr
 import { listMatchesAdminController } from '../controllers/listMatchesAdminController';
 import { listAuditLogsController } from '../controllers/listAuditLogsController';
 import { syncFixtures } from '../services/syncFixtures';
+import prisma from '../prisma';
 
 const router = Router();
 
@@ -21,9 +22,17 @@ router.post('/:id/score', requireAdmin, (req, res) => {
   });
 });
 
-router.post('/sync', requireAdmin, async (_req, res) => {
+router.post('/sync', requireAdmin, async (req: any, res) => {
   try {
     const result = await syncFixtures();
+    await prisma.adminAuditLog.create({
+      data: {
+        adminUserId: req.adminUserId ?? 'unknown',
+        service: 'matches',
+        action: 'SYNC_FIXTURES',
+        detail: JSON.stringify({ upserted: result.upserted }),
+      },
+    });
     res.json({ message: 'Sync complete', upserted: result.upserted });
   } catch (err) {
     console.error('[syncFixtures] Manual trigger error:', err);

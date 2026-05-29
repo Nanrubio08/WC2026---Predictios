@@ -47,7 +47,7 @@ export default function AboutPage() {
       <section className="card space-y-3">
         <h2 className="text-lg font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Contacto</h2>
         <p className="text-wc-muted text-sm leading-relaxed">
-          ¿Tienes preguntas o sugerencias? Escribenos a <a href="mailto:minuto90site@gmail.com" className="text-wc-gold hover:underline">minuto90site@gmail.com</a>
+          ¿Tienes preguntas o sugerencias? Escribenos a <a href="mailto:soporte@minuto90.site" className="text-wc-gold hover:underline">soporte@minuto90.site</a>
         </p>
       </section>
     </div>

@@ -45,7 +45,7 @@ export default function PrivacyPage() {
       </Section>
 
       <Section title="7. Contacto">
-        <p>Para consultas sobre privacidad o para ejercer tus derechos, escribenos a <a href="mailto:minuto90site@gmail.com" className="text-wc-gold hover:underline">minuto90site@gmail.com</a></p>
+        <p>Para consultas sobre privacidad o para ejercer tus derechos, escribenos a <a href="mailto:soporte@minuto90.site" className="text-wc-gold hover:underline">soporte@minuto90.site</a></p>
       </Section>
     </div>
   );

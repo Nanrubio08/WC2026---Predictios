@@ -2,12 +2,12 @@ import { Response } from 'express';
 import prisma from '../prisma';
 import { AdminRequest } from '../middleware/requireAdmin';
 import { deleteUserData } from '../clients/predictionsClient';
+import { writeAuditLog } from '../clients/auditClient';
 
 
 export async function listUsersController(_req: AdminRequest, res: Response): Promise<void> {
   const users = await prisma.user.findMany({
-    where: { isAdmin: false },
-    select: { id: true, username: true, name: true, email: true, createdAt: true },
+    select: { id: true, username: true, name: true, email: true, isAdmin: true, createdAt: true },
     orderBy: { createdAt: 'asc' },
   });
   res.json(users);
@@ -41,11 +41,17 @@ export async function deleteUserController(req: AdminRequest, res: Response): Pr
     await deleteUserData(userId);
   } catch (err) {
     console.error('Failed to delete user data in predictions-service', err);
-    // Continue anyway — user should still be removed from auth DB
   }
 
   // Delete the user (Cascade handles RefreshTokens)
   await prisma.user.delete({ where: { id: userId } });
+
+  await writeAuditLog({
+    adminUserId: req.adminUserId ?? 'unknown',
+    service:     'auth',
+    action:      'DELETE_USER',
+    detail: { targetUserId: userId, username: user.username, email: user.email },
+  });
 
   res.json({ ok: true });
 }

@@ -36,12 +36,14 @@ model Match {
 model AdminAuditLog {
   id            String   @id @default(uuid())
   adminUserId   String   @map("admin_user_id")
-  matchId       Int      @map("match_id")
+  service       String   @default("matches")
   action        String
+  matchId       Int?     @map("match_id")
   previousHome  Int?     @map("previous_home")
   previousAway  Int?     @map("previous_away")
-  newHome       Int      @map("new_home")
-  newAway       Int      @map("new_away")
+  newHome       Int?     @map("new_home")
+  newAway       Int?     @map("new_away")
+  detail        String?  // JSON string for non-match audit context
   createdAt     DateTime @default(now()) @map("created_at")
 
   @@map("admin_audit_log")

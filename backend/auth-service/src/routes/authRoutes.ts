@@ -9,6 +9,8 @@ import { getProfileController } from '../controllers/getProfileController';
 import { updateProfileController } from '../controllers/updateProfileController';
 import { changePasswordController } from '../controllers/changePasswordController';
 import { uploadAvatarController } from '../controllers/uploadAvatarController';
+import { forgotPasswordController } from '../controllers/forgotPasswordController';
+import { resetPasswordController } from '../controllers/resetPasswordController';
 import { authenticateJwt } from '../middleware/authenticateJwt';
 
 const router = Router();
@@ -27,6 +29,14 @@ const registerLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many registration attempts, please try again later' },
+});
+
+const forgotLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' },
 });
 
 router.post('/register', registerLimiter, (req, res) => {
@@ -89,6 +99,29 @@ router.put('/profile/password', authenticateJwt, (req, res) => {
 router.put('/profile/avatar', authenticateJwt, (req, res) => {
   uploadAvatarController(req as any, res).catch((err) => {
     console.error('uploadAvatar error', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+});
+
+// ── Password reset (public) ────────────────────────────────────────────────
+router.post('/forgot-password', forgotLimiter, (req, res) => {
+  forgotPasswordController(req, res).catch((err) => {
+    console.error('forgotPassword error', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+});
+
+const resetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' },
+});
+
+router.post('/reset-password', resetLimiter, (req, res) => {
+  resetPasswordController(req, res).catch((err) => {
+    console.error('resetPassword error', err);
     res.status(500).json({ error: 'Internal server error' });
   });
 });

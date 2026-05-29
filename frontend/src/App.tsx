@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
           </Routes>
         </main>
         <Footer />

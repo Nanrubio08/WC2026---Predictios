@@ -48,7 +48,7 @@ export default function TermsPage() {
       </Section>
 
       <Section title="8. Contacto">
-        <p>Para consultas sobre estos términos contactanos en <a href="mailto:minuto90site@gmail.com" className="text-wc-gold hover:underline">minuto90site@gmail.com</a></p>
+        <p>Para consultas sobre estos términos contactanos en <a href="mailto:soporte@minuto90.site" className="text-wc-gold hover:underline">soporte@minuto90.site</a></p>
       </Section>
     </div>
   );

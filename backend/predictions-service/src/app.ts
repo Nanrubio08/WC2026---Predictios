@@ -13,6 +13,7 @@ import predictionsRouter from './routes/predictionsRoutes';
 import leaderboardRouter from './routes/leaderboardRoutes';
 import adminLeaderboardRouter from './routes/adminLeaderboardRoutes';
 import adminBonusRouter from './routes/adminBonusRoutes';
+import adminPredictionsRouter from './routes/adminPredictionsRoutes';
 import { myPredictionsRouter } from './routes/myPredictionsRoutes';
 import bonusRouter from './routes/bonusRoutes';
 import { errorHandler } from './middleware/errorHandler';
@@ -51,6 +52,7 @@ app.use('/api/predictions', myPredictionsRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/admin/leaderboard', adminLeaderboardRouter);
 app.use('/api/admin/bonus', adminBonusRouter);
+app.use('/api/admin/predictions', adminPredictionsRouter);
 app.use('/api/bonus', bonusLimiter, bonusRouter);
 
 app.use(errorHandler);

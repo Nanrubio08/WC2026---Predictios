@@ -1,12 +1,20 @@
 import { Router } from 'express';
 import { requireAdmin } from '../middleware/requireAdmin';
 import { listUsersController, deleteUserController } from '../controllers/adminUsersController';
+import { updateUserController } from '../controllers/updateUserController';
 
 const router = Router();
 
 router.get('/', requireAdmin, (req, res) => {
   listUsersController(req as any, res).catch((err) => {
     console.error('listUsers error', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+});
+
+router.patch('/:userId', requireAdmin, (req, res) => {
+  updateUserController(req as any, res).catch((err) => {
+    console.error('updateUser error', err);
     res.status(500).json({ error: 'Internal server error' });
   });
 });

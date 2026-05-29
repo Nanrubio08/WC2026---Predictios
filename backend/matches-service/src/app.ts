@@ -7,6 +7,7 @@ import { corsOptions } from './config/cors';
 import healthRouter from './routes/health';
 import matchesRouter from './routes/matchesRoutes';
 import internalMatchesRouter from './routes/internalMatchesRoutes';
+import internalAuditRouter from './routes/internalAuditRoutes';
 import adminMatchesRouter from './routes/adminMatchesRoutes';
 import { registerSyncFixturesJob } from './jobs/syncFixtures';
 import { registerPollLiveMatchesJob } from './jobs/pollLiveMatches';
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/health', healthRouter);
 app.use('/api/matches', matchesRouter);
 app.use('/internal/matches', internalMatchesRouter);
+app.use('/internal/audit', internalAuditRouter);
 app.use('/api/admin/matches', adminMatchesRouter);
 
 registerSyncFixturesJob();

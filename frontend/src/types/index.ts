@@ -60,14 +60,28 @@ export interface BonusAnswer {
 }
 
 export interface AuditLog {
-  id: string;
-  adminUserId: string;
-  matchId: number;
-  action: string;
+  id:           string;
+  adminUserId:  string;
+  service:      string;
+  action:       string;
+  matchId:      number | null;
   previousHome: number | null;
   previousAway: number | null;
-  newHome: number;
-  newAway: number;
-  createdAt: string;
+  newHome:      number | null;
+  newAway:      number | null;
+  detail:       string | null;
+  createdAt:    string;
+}
+
+export interface AdminPrediction {
+  id:                 string;
+  userId:             string;
+  username:           string;
+  name:               string | null;
+  matchId:            number;
+  homeScorePredicted: number;
+  awayScorePredicted: number;
+  pointsEarned:       number;
+  updatedAt:          string;
 }
 

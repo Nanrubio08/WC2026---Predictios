@@ -24,13 +24,11 @@ services:
       PORT: ${AUTH_SERVICE_PORT:-3001}
       PREDICTIONS_SERVICE_URL: ${PREDICTIONS_SERVICE_URL}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      MATCHES_SERVICE_URL: ${MATCHES_SERVICE_URL}
     expose:
-      - "${AUTH_SERVICE_PORT:-3001}"
-    networks:
-      - worldcup-net
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:${AUTH_SERVICE_PORT:-3001}/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Match, LeaderboardEntry, User, MyPrediction, BonusAnswer, AuditLog } from '../types';
+import type { Match, LeaderboardEntry, User, MyPrediction, BonusAnswer, AuditLog, AdminPrediction } from '../types';
 
 const api = axios.create({ baseURL: '', withCredentials: true });
 
@@ -53,6 +53,14 @@ export async function googleAuth(credential: string, code?: string): Promise<{ t
 
 export async function logoutUser(): Promise<void> {
   await api.post('/api/auth/logout');
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post('/api/auth/forgot-password', { email });
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await api.post('/api/auth/reset-password', { token, newPassword });
 }
 
 export async function submitPrediction(data: { matchId: number; homeScorePredicted: number; awayScorePredicted: number }) {
@@ -145,13 +153,25 @@ export async function adminDeclareWinner(winner: string): Promise<{ winner: stri
   return res.data;
 }
 
-export async function adminFetchUsers(): Promise<{ id: string; username: string; name: string | null; email: string; createdAt: string }[]> {
+export async function adminFetchUsers(): Promise<{ id: string; username: string; name: string | null; email: string; isAdmin: boolean; createdAt: string }[]> {
   const res = await api.get('/api/admin/users');
   return Array.isArray(res.data) ? res.data : [];
 }
 
+export async function adminUpdateUser(
+  userId: string,
+  data: { username?: string; name?: string | null; email?: string; isAdmin?: boolean },
+): Promise<void> {
+  await api.patch(`/api/admin/users/${userId}`, data);
+}
+
 export async function adminDeleteUser(userId: string): Promise<void> {
   await api.delete(`/api/admin/users/${userId}`);
+}
+
+export async function adminFetchAllPredictions(): Promise<AdminPrediction[]> {
+  const res = await api.get<AdminPrediction[]>('/api/admin/predictions/all');
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 export type InviteCodeRow = { code: string; status: 'used' | 'available'; username: string | null; email: string | null; usedAt: string | null; createdAt: string };

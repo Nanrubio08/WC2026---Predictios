@@ -2,6 +2,7 @@ import { Response } from 'express';
 import prisma from '../prisma';
 import { AdminRequest } from '../middleware/requireAdmin';
 import { generateCodes } from '../utils/inviteCodes';
+import { writeAuditLog } from '../clients/auditClient';
 
 
 export async function generateCodesController(req: AdminRequest, res: Response): Promise<void> {
@@ -12,6 +13,14 @@ export async function generateCodesController(req: AdminRequest, res: Response):
   }
 
   const codes = await generateCodes(count);
+
+  await writeAuditLog({
+    adminUserId: req.adminUserId ?? 'unknown',
+    service:     'auth',
+    action:      'GENERATE_INVITE_CODES',
+    detail:      { count: codes.length },
+  });
+
   res.status(201).json({ generated: codes.length, codes });
 }
 
