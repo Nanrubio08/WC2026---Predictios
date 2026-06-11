@@ -3,7 +3,7 @@ import { pollLiveMatches } from '../services/pollLiveMatches';
 import logger from '../utils/logger';
 
 export function registerPollLiveMatchesJob(): void {
-  cron.schedule('*/5 * * * *', async () => {
+  cron.schedule('* * * * *', async () => {
     try {
       await pollLiveMatches();
     } catch (err) {
@@ -11,5 +11,5 @@ export function registerPollLiveMatchesJob(): void {
     }
   });
 
-  logger.info('Live poll job registered (every 5 min)');
+  logger.info('Live poll job registered (every 1 min)');
 }

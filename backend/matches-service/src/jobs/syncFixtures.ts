@@ -3,7 +3,7 @@ import { syncFixtures } from '../services/syncFixtures';
 import logger from '../utils/logger';
 
 export function registerSyncFixturesJob(): void {
-  cron.schedule('0 */6 * * *', async () => {
+  cron.schedule('*/2 * * * *', async () => {
     logger.info('Starting fixture sync…');
     try {
       const result = await syncFixtures();
@@ -13,5 +13,5 @@ export function registerSyncFixturesJob(): void {
     }
   });
 
-  logger.info('Sync job registered (every 6 h: 00:00, 06:00, 12:00, 18:00 UTC)');
+  logger.info('Sync job registered (every 2 min)');
 }
