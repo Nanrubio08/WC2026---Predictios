@@ -21,6 +21,8 @@ services:
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
       FRONTEND_URL: ${FRONTEND_URL}
       MATCHES_SERVICE_URL: ${MATCHES_SERVICE_URL}
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     networks:
@@ -41,6 +43,8 @@ services:
       FOOTBALL_DATA_API_KEY: ${FOOTBALL_DATA_API_KEY}
       FOOTBALL_COMPETITION: ${FOOTBALL_COMPETITION:-WC}
       FOOTBALL_SEASON: ${FOOTBALL_SEASON:-2026}
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "${MATCHES_SERVICE_PORT}:${MATCHES_SERVICE_PORT}"
     networks:
@@ -59,6 +63,8 @@ services:
       MATCHES_SERVICE_URL: ${MATCHES_SERVICE_URL}
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "${PREDICTIONS_SERVICE_PORT}:${PREDICTIONS_SERVICE_PORT}"
     networks:

@@ -3,6 +3,7 @@ import { validateEnv } from './config/env';
 validateEnv();
 import express from 'express';
 import cors from 'cors';
+import morgan from 'morgan';
 import { corsOptions } from './config/cors';
 import healthRouter from './routes/health';
 import matchesRouter from './routes/matchesRoutes';
@@ -12,6 +13,7 @@ import adminMatchesRouter from './routes/adminMatchesRoutes';
 import { registerSyncFixturesJob } from './jobs/syncFixtures';
 import { registerPollLiveMatchesJob } from './jobs/pollLiveMatches';
 import { errorHandler } from './middleware/errorHandler';
+import logger from './utils/logger';
 
 const app = express();
 app.set('trust proxy', 1); // trust Nginx reverse proxy for X-Forwarded-For
@@ -19,6 +21,7 @@ const PORT = process.env.PORT ?? 3002;
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(morgan('combined', { stream: { write: (msg) => logger.http(msg.trim()) } }));
 
 app.use('/health', healthRouter);
 app.use('/api/matches', matchesRouter);
@@ -32,7 +35,7 @@ registerPollLiveMatchesJob();
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`matches-service running on port ${PORT}`);
+  logger.info(`matches-service running on port ${PORT}`);
 });
 
 export default app;

@@ -1,6 +1,7 @@
 import prisma from '../prisma';
 import { fetchLiveFixtures } from '../utils/apiFootball';
 import { triggerScoring } from '../clients/scoringClient';
+import logger from '../utils/logger';
 
 
 const COMPETITION = process.env.FOOTBALL_COMPETITION ?? 'WC';
@@ -35,9 +36,9 @@ export async function pollLiveMatches(): Promise<void> {
 
       try {
         await triggerScoring(match.id);
-        console.log(`[pollLiveMatches] Scoring triggered for match ${match.id}`);
+        logger.info(`Scoring triggered for match`, { matchId: match.id });
       } catch (err) {
-        console.error(`[pollLiveMatches] Failed to trigger scoring for match ${match.id}`, err);
+        logger.error(`Failed to trigger scoring for match`, { matchId: match.id, error: err });
       }
     } else if (['IN_PLAY', 'PAUSED'].includes(match.status)) {
       await prisma.match.update({
