@@ -70,6 +70,12 @@ export default function MatchListPage({ isAuthenticated }: Props) {
       .then(setMatches)
       .catch(() => setError('No se pudieron cargar los partidos. Por favor intentá de nuevo.'))
       .finally(() => setLoading(false));
+
+    const interval = setInterval(() => {
+      fetchMatches().then(setMatches).catch(() => {});
+    }, 60_000);
+
+    return () => clearInterval(interval);
   }, [isAuthenticated]);
 
   // Available stages that have at least one match

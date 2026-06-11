@@ -7,6 +7,7 @@ export interface UserPrediction {
   matchId: number;
   homeScorePredicted: number;
   awayScorePredicted: number;
+  pointsEarned: number;
 }
 
 export async function getUserPredictions(userId: string): Promise<UserPrediction[]> {

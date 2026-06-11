@@ -11,7 +11,7 @@ export interface Match {
   stage: string | null;
   group: string | null;
   matchday: number | null;
-  userPrediction?: { homeScorePredicted: number; awayScorePredicted: number } | null;
+  userPrediction?: { homeScorePredicted: number; awayScorePredicted: number; pointsEarned: number } | null;
 }
 
 export interface LeaderboardEntry {

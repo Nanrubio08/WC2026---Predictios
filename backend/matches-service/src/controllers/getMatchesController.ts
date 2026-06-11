@@ -23,7 +23,11 @@ export async function getMatchesController(req: AuthenticatedRequest, res: Respo
   try {
     const predictions = await getUserPredictions(req.userId);
     predictionMap = Object.fromEntries(
-      predictions.map((p) => [p.matchId, { homeScorePredicted: p.homeScorePredicted, awayScorePredicted: p.awayScorePredicted }])
+      predictions.map((p) => [p.matchId, {
+        homeScorePredicted: p.homeScorePredicted,
+        awayScorePredicted: p.awayScorePredicted,
+        pointsEarned: p.pointsEarned,
+      }])
     );
   } catch (err) {
     console.error('Failed to fetch user predictions for enrichment', err);

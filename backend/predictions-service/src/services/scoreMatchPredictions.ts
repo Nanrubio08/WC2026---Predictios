@@ -1,6 +1,8 @@
 import { Prisma } from '../generated/client';
 import prisma from '../prisma';
 import { calculatePoints } from './calculatePoints';
+import { getUsersByIds } from '../clients/authClient';
+import logger from '../utils/logger';
 
 
 export async function scoreMatchPredictions(
@@ -13,6 +15,17 @@ export async function scoreMatchPredictions(
   });
 
   if (!predictions.length) {
+    return { scored: 0 };
+  }
+
+  // Fetch roles to exclude admins from leaderboard updates
+  const userIds = [...new Set(predictions.map((p) => p.userId))];
+  let adminIds = new Set<string>();
+  try {
+    const users = await getUsersByIds(userIds);
+    adminIds = new Set(users.filter((u) => u.isAdmin).map((u) => u.id));
+  } catch (err) {
+    logger.error('scoreMatchPredictions: failed to fetch user roles, skipping leaderboard update as safety measure', { matchId, error: err });
     return { scored: 0 };
   }
 
@@ -30,6 +43,11 @@ export async function scoreMatchPredictions(
         where: { id: prediction.id },
         data: { pointsEarned: points },
       });
+
+      // Never update leaderboard for admin users
+      if (adminIds.has(prediction.userId)) {
+        continue;
+      }
 
       if (delta === 0) {
         continue;

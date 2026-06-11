@@ -140,7 +140,7 @@ export default function MatchCard({ match, isAuthenticated }: Props) {
 
           {/* Score / VS */}
           <div className="shrink-0 flex flex-col items-center">
-            {(isFinished || isLive) && hasScore ? (
+            {(isFinished || isLive) ? (
               <div className="rounded-xl px-4 py-2 text-center tabular-nums"
                 style={{
                   background: isLive ? 'rgba(240,62,62,0.08)' : 'rgba(245,166,35,0.06)',
@@ -151,7 +151,10 @@ export default function MatchCard({ match, isAuthenticated }: Props) {
                   color: isLive ? '#F03E3E' : '#E8EDF5',
                   lineHeight: 1,
                 }}>
-                {match.homeScoreActual} <span style={{ color: isLive ? 'rgba(240,62,62,0.5)' : 'rgba(232,237,245,0.3)' }}>–</span> {match.awayScoreActual}
+                {hasScore
+                  ? <>{match.homeScoreActual} <span style={{ color: isLive ? 'rgba(240,62,62,0.5)' : 'rgba(232,237,245,0.3)' }}>–</span> {match.awayScoreActual}</>
+                  : <span style={{ fontSize: '1.1rem', color: '#5B6E8C' }}>? – ?</span>
+                }
               </div>
             ) : (
               <div className="rounded-xl px-5 py-2"
@@ -178,10 +181,31 @@ export default function MatchCard({ match, isAuthenticated }: Props) {
 
         {/* User's prediction */}
         {match.userPrediction && (
-          <div className="mt-4 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs"
-            style={{ background: 'rgba(0,200,122,0.07)', border: '1px solid rgba(0,200,122,0.18)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
-            <span>🎯</span>
-            <span className="font-bold">TU PRONÓSTICO: {match.userPrediction.homeScorePredicted} – {match.userPrediction.awayScorePredicted}</span>
+          <div className="mt-4 space-y-1.5">
+            <div className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs"
+              style={{ background: 'rgba(0,200,122,0.07)', border: '1px solid rgba(0,200,122,0.18)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
+              <span>🎯</span>
+              <span className="font-bold">TU PRONÓSTICO: {match.userPrediction.homeScorePredicted} – {match.userPrediction.awayScorePredicted}</span>
+            </div>
+            {isFinished && (
+              <div className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs"
+                style={{
+                  background: match.userPrediction.pointsEarned === 5
+                    ? 'rgba(245,166,35,0.1)' : match.userPrediction.pointsEarned === 3
+                    ? 'rgba(0,200,122,0.07)' : 'rgba(91,110,140,0.1)',
+                  border: match.userPrediction.pointsEarned === 5
+                    ? '1px solid rgba(245,166,35,0.3)' : match.userPrediction.pointsEarned === 3
+                    ? '1px solid rgba(0,200,122,0.18)' : '1px solid rgba(91,110,140,0.2)',
+                  color: match.userPrediction.pointsEarned === 5
+                    ? '#F5A623' : match.userPrediction.pointsEarned === 3
+                    ? '#00C87A' : '#5B6E8C',
+                  fontFamily: 'Barlow Condensed, sans-serif',
+                  letterSpacing: '0.05em',
+                }}>
+                <span>{match.userPrediction.pointsEarned === 5 ? '🏆' : match.userPrediction.pointsEarned === 3 ? '✅' : '❌'}</span>
+                <span className="font-black">{match.userPrediction.pointsEarned} PTS</span>
+              </div>
+            )}
           </div>
         )}
 

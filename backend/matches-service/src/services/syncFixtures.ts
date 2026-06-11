@@ -27,24 +27,54 @@ export async function syncFixtures(): Promise<{ upserted: number }> {
 
     const data = buildMatchData(match);
     const newStatus = data.status;
-    const hasScores = data.homeScoreActual !== null && data.awayScoreActual !== null;
 
-    // Read current DB state before upserting to detect finished transition
+    // Read current DB state before upserting to detect state transitions
     const existing = await prisma.match.findUnique({ where: { id: match.id } });
     const wasNotFinished = !existing || existing.status !== 'finished';
+    const wasFinishedWithNullScores =
+      existing?.status === 'finished' &&
+      (existing.homeScoreActual === null || existing.awayScoreActual === null);
+
+    const isAlreadyFinished = existing?.status === 'finished';
+
+    // If the match is already finished with scores set (by API or admin), NEVER overwrite those
+    // scores via automated sync — only the admin endpoint may change them.
+    const preserveExistingScores =
+      isAlreadyFinished &&
+      existing.homeScoreActual !== null &&
+      existing.awayScoreActual !== null;
+
+    const updateData = {
+      ...data,
+      // Never revert a finished match back to live/scheduled via automated sync
+      status: isAlreadyFinished ? ('finished' as const) : data.status,
+      homeScoreActual: preserveExistingScores
+        ? existing.homeScoreActual
+        : (data.homeScoreActual ?? existing?.homeScoreActual ?? null),
+      awayScoreActual: preserveExistingScores
+        ? existing.awayScoreActual
+        : (data.awayScoreActual ?? existing?.awayScoreActual ?? null),
+    };
+    const finalHasScores =
+      updateData.homeScoreActual !== null && updateData.awayScoreActual !== null;
 
     await prisma.match.upsert({
       where: { id: match.id },
-      update: data,
+      update: updateData,
       create: { id: match.id, ...data },
     });
     upserted++;
 
-    // Trigger scoring exactly once when a match transitions to finished
-    if (wasNotFinished && newStatus === 'finished' && hasScores) {
+    // Trigger scoring when:
+    // (a) match just transitioned to finished with scores, OR
+    // (b) match was already finished but had null scores and now has scores
+    const shouldScore = newStatus === 'finished' && finalHasScores &&
+      (wasNotFinished || wasFinishedWithNullScores);
+
+    if (shouldScore) {
       try {
         await triggerScoring(match.id);
-        logger.info('Scoring triggered by syncFixtures', { matchId: match.id });
+        logger.info('Scoring triggered by syncFixtures', { matchId: match.id, wasFinishedWithNullScores });
       } catch (err) {
         logger.error('Failed to trigger scoring', { matchId: match.id, error: err });
       }
@@ -55,15 +85,22 @@ export async function syncFixtures(): Promise<{ upserted: number }> {
 }
 
 function buildMatchData(match: FDMatch) {
+  const status = mapStatus(match.status);
+  // For live matches use halfTime scores if fullTime not yet available
+  const homeScore = match.score.fullTime.home ??
+    (status === 'live' ? match.score.halfTime.home : null);
+  const awayScore = match.score.fullTime.away ??
+    (status === 'live' ? match.score.halfTime.away : null);
+
   return {
     homeTeam: match.homeTeam.name,
     awayTeam: match.awayTeam.name,
     homeLogoUrl: match.homeTeam.crest ?? null,
     awayLogoUrl: match.awayTeam.crest ?? null,
     kickoffTime: new Date(match.utcDate),
-    status: mapStatus(match.status),
-    homeScoreActual: match.score.fullTime.home,
-    awayScoreActual: match.score.fullTime.away,
+    status,
+    homeScoreActual: homeScore,
+    awayScoreActual: awayScore,
     stage: match.stage ?? null,
     group: match.group ?? null,
     matchday: match.matchday ?? null,

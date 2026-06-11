@@ -16,6 +16,7 @@ export async function getUserPredictionsController(req: Request, res: Response):
       matchId: true,
       homeScorePredicted: true,
       awayScorePredicted: true,
+      pointsEarned: true,
     },
   });
 

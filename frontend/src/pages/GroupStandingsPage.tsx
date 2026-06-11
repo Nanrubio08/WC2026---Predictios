@@ -126,15 +126,19 @@ export default function GroupStandingsPage() {
   const { user } = useAuthToken();
   const isAdmin = user?.role === 'admin';
 
-  const load = () => {
-    setLoading(true);
+  const load = (silent = false) => {
+    if (!silent) setLoading(true);
     fetchMatches()
       .then(setMatches)
-      .catch(() => setError('No se pudieron cargar los datos.'))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!silent) setError('No se pudieron cargar los datos.'); })
+      .finally(() => { if (!silent) setLoading(false); });
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const interval = setInterval(() => load(true), 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   async function handleSync() {
     setSyncing(true);
@@ -179,7 +183,7 @@ export default function GroupStandingsPage() {
       {error && (
         <div className="py-16 text-center text-wc-muted">
           <p>{error}</p>
-          <button onClick={load} className="btn-primary mt-4">Reintentar</button>
+          <button onClick={() => load()} className="btn-primary mt-4">Reintentar</button>
         </div>
       )}
 

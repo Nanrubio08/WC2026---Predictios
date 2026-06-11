@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { listLeaderboard } from '../services/listLeaderboard';
 import { getUsersByIds } from '../clients/authClient';
+import logger from '../utils/logger';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -21,7 +22,10 @@ export async function getLeaderboardController(_req: Request, res: Response): Pr
       adminSet = new Set(users.filter((u) => u.isAdmin).map((u) => u.id));
     }
   } catch (err) {
-    console.error('Failed to fetch usernames for leaderboard', err);
+    logger.error('Failed to fetch user info for leaderboard — hiding all unresolved users to prevent admin leak', { error: err });
+    // Return only entries whose user info was resolved; since we have none, return empty to be safe.
+    res.json([]);
+    return;
   }
 
   const result = entries
