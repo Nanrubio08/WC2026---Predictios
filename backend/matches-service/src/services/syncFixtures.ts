@@ -1,5 +1,7 @@
 import prisma from '../prisma';
 import { fetchFixtures, FDMatch } from '../utils/apiFootball';
+import { triggerScoring } from '../clients/scoringClient';
+import logger from '../utils/logger';
 
 
 const COMPETITION = process.env.FOOTBALL_COMPETITION ?? 'WC';
@@ -24,12 +26,29 @@ export async function syncFixtures(): Promise<{ upserted: number }> {
     }
 
     const data = buildMatchData(match);
+    const newStatus = data.status;
+    const hasScores = data.homeScoreActual !== null && data.awayScoreActual !== null;
+
+    // Read current DB state before upserting to detect finished transition
+    const existing = await prisma.match.findUnique({ where: { id: match.id } });
+    const wasNotFinished = !existing || existing.status !== 'finished';
+
     await prisma.match.upsert({
       where: { id: match.id },
       update: data,
       create: { id: match.id, ...data },
     });
     upserted++;
+
+    // Trigger scoring exactly once when a match transitions to finished
+    if (wasNotFinished && newStatus === 'finished' && hasScores) {
+      try {
+        await triggerScoring(match.id);
+        logger.info('Scoring triggered by syncFixtures', { matchId: match.id });
+      } catch (err) {
+        logger.error('Failed to trigger scoring', { matchId: match.id, error: err });
+      }
+    }
   }
 
   return { upserted };
