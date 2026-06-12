@@ -1,8 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminExportLeaderboardCsv, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminUpdateUser, adminDeleteUser, adminFetchInviteCodes, adminGenerateCodes, adminExportInviteCodesCsv, adminFetchAllPredictions, type InviteCodeRow } from '../services/api';
+import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminExportLeaderboardCsv, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminUpdateUser, adminDeleteUser, adminFetchInviteCodes, adminGenerateCodes, adminExportInviteCodesCsv, adminFetchPredictionsByUser, adminRemoveFromLeaderboard, type InviteCodeRow, type AdminUserPredictionSummary } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
-import type { Match, AuditLog, AdminPrediction } from '../types';
+import type { Match, AuditLog } from '../types';
+
+// Day 1 = June 11 2026 (tournament start). Matches group by viewer's local timezone.
+function getMatchDay(kickoffTime: string | null): number | null {
+  if (!kickoffTime) return null;
+  const d = new Date(kickoffTime);
+  const matchMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const tournamentMidnight = new Date(2026, 5, 11).getTime();
+  const day = Math.floor((matchMidnight - tournamentMidnight) / 86_400_000) + 1;
+  return day >= 1 ? day : null;
+}
 
 const WC_TEAMS = [
   'Argentina', 'Brasil', 'Francia', 'Inglaterra', 'España', 'Alemania',
@@ -327,87 +337,305 @@ function UsersAdmin() {
 }
 
 function PredictionsAdmin() {
-  const [predictions, setPredictions]   = useState<AdminPrediction[]>([]);
-  const [loading, setLoading]           = useState(true);
-  const [filterUser, setFilterUser]     = useState('');
-  const [filterMatch, setFilterMatch]   = useState('');
+  const [data, setData]         = useState<AdminUserPredictionSummary[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [filterUser, setFilterUser]   = useState('');
+  const [filterMatch, setFilterMatch] = useState('');
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   useEffect(() => {
-    adminFetchAllPredictions()
-      .then(setPredictions)
+    adminFetchPredictionsByUser()
+      .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = predictions.filter((p) => {
-    const userOk  = !filterUser  || p.username.toLowerCase().includes(filterUser.toLowerCase());
-    const matchOk = !filterMatch || String(p.matchId).includes(filterMatch);
-    return userOk && matchOk;
+  const toggleExpand = (userId: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(userId) ? next.delete(userId) : next.add(userId);
+      return next;
+    });
+  };
+
+  const allUsers   = data.map((u) => ({ id: u.userId, label: u.username }));
+  const allMatches = Array.from(new Set(data.flatMap((u) => u.predictions.map((p) => p.matchId)))).sort((a, b) => a - b);
+
+  // Collect all unique days from all predictions
+  const availableDays = useMemo(() => {
+    const days = new Set(
+      data.flatMap((u) => u.predictions.map((p) => getMatchDay(p.kickoffTime))).filter((d): d is number => d !== null),
+    );
+    return Array.from(days).sort((a, b) => a - b);
+  }, [data]);
+
+  const filtered = data.filter((u) => {
+    const userOk  = !filterUser  || u.userId === filterUser;
+    const matchOk = !filterMatch || u.predictions.some((p) => p.matchId === Number(filterMatch));
+    const dayOk   = selectedDay === null || u.predictions.some((p) => getMatchDay(p.kickoffTime) === selectedDay);
+    return userOk && matchOk && dayOk;
   });
 
-  function exportCsv() {
-    const header = ['userId', 'username', 'name', 'matchId', 'home', 'away', 'points', 'updatedAt'].join(',');
-    const rows   = filtered.map((p) =>
-      [p.userId, p.username, p.name ?? '', p.matchId, p.homeScorePredicted, p.awayScorePredicted, p.pointsEarned, p.updatedAt].join(',')
-    );
-    const csv = [header, ...rows].join('\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    const a   = document.createElement('a');
-    a.href = url; a.download = 'predicciones.csv'; a.click();
-    URL.revokeObjectURL(url);
+  const inputStyle: React.CSSProperties = {
+    background: 'rgba(21,33,54,0.8)', border: '1px solid rgba(91,110,140,0.3)',
+    borderRadius: 8, color: '#E8EDF5', padding: '6px 12px',
+    fontSize: 12, fontFamily: 'Barlow Condensed, sans-serif',
+  };
+
+  if (loading) return <div className="animate-pulse h-24 rounded-xl" style={{ background: 'rgba(21,33,54,0.6)' }} />;
+
+  const totalPredictions = data.reduce((s, u) => s + u.totalPredictions, 0);
+  const usersWithZero    = data.filter((u) => u.totalPredictions === 0).length;
+
+  return (
+    <div className="card overflow-hidden">
+      {/* Filters + stats bar */}
+      <div className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid rgba(21,33,54,0.8)' }}>
+        <select value={filterUser} onChange={(e) => setFilterUser(e.target.value)} style={{ ...inputStyle, flex: '1 1 150px' }}>
+          <option value="">Todos los usuarios</option>
+          {allUsers.map((u) => <option key={u.id} value={u.id}>{u.label}</option>)}
+        </select>
+        <select value={filterMatch} onChange={(e) => setFilterMatch(e.target.value)} style={{ ...inputStyle, flex: '1 1 150px' }}>
+          <option value="">Todos los partidos</option>
+          {allMatches.map((id) => {
+            const pred = data.flatMap((u) => u.predictions).find((p) => p.matchId === id);
+            return <option key={id} value={String(id)}>#{id} {pred ? `${pred.homeTeam} vs ${pred.awayTeam}` : ''}</option>;
+          })}
+        </select>
+        {availableDays.length > 0 && (
+          <select
+            value={selectedDay ?? ''}
+            onChange={(e) => setSelectedDay(e.target.value === '' ? null : Number(e.target.value))}
+            style={{ ...inputStyle, flex: '1 1 120px' }}
+          >
+            <option value="">Todos los días</option>
+            {availableDays.map((day) => <option key={day} value={day}>Día {day}</option>)}
+          </select>
+        )}
+        <span className="text-xs text-wc-muted ml-auto" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+          {totalPredictions} predicciones · {filtered.length} usuarios
+          {usersWithZero > 0 && <span className="text-red-400 ml-2">⚠ {usersWithZero} sin predicciones</span>}
+        </span>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="py-12 text-center text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>No hay datos.</div>
+      ) : (
+        <div>
+          {filtered.map((u) => {
+            const isOpen = expanded.has(u.userId);
+            const visiblePredictions = u.predictions.filter((p) => {
+              const matchOk = !filterMatch || p.matchId === Number(filterMatch);
+              const dayOk   = selectedDay === null || getMatchDay(p.kickoffTime) === selectedDay;
+              return matchOk && dayOk;
+            });
+            const totalPts = visiblePredictions.reduce((s, p) => s + (p.pointsEarned ?? 0), 0);
+            const hasZero  = u.totalPredictions === 0;
+
+            return (
+              <div key={u.userId}>
+                <div
+                  className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5"
+                  style={{ borderBottom: '1px solid rgba(21,33,54,0.6)', background: hasZero ? 'rgba(240,62,62,0.04)' : undefined }}
+                  onClick={() => toggleExpand(u.userId)}
+                >
+                  <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 13, fontWeight: 700, color: hasZero ? '#F03E3E' : '#E8EDF5', letterSpacing: '0.03em' }}>
+                    {u.username}
+                  </span>
+                  {u.name && <span className="text-xs text-wc-dim">{u.name}</span>}
+                  <span className="ml-auto text-xs font-bold tabular-nums px-2 py-0.5 rounded"
+                    style={{ background: hasZero ? 'rgba(240,62,62,0.12)' : 'rgba(91,110,140,0.15)', color: hasZero ? '#F03E3E' : '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                    {u.totalPredictions} pred.
+                  </span>
+                  {totalPts > 0 && (
+                    <span className="text-xs font-bold tabular-nums px-2 py-0.5 rounded"
+                      style={{ background: 'rgba(0,200,122,0.1)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      {totalPts} pts
+                    </span>
+                  )}
+                  <span className="text-wc-dim text-xs ml-1">{isOpen ? '▲' : '▼'}</span>
+                </div>
+
+                {isOpen && (
+                  <div style={{ background: 'rgba(4,7,14,0.4)', borderBottom: '1px solid rgba(21,33,54,0.8)' }}>
+                    {visiblePredictions.length === 0 ? (
+                      <div className="px-6 py-4 text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        {hasZero ? 'Este usuario no ha ingresado predicciones.' : 'Sin predicciones para el filtro seleccionado.'}
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid rgba(21,33,54,0.6)' }}>
+                              {['PARTIDO', 'EQUIPOS', 'PREDICCIÓN', 'RESULTADO', 'PTS', 'INGRESADO'].map((h) => (
+                                <th key={h} className="py-2 px-4 text-left font-bold text-wc-muted"
+                                  style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {visiblePredictions.map((p) => {
+                              const pts = p.pointsEarned ?? 0;
+                              const ptsColor = pts === 5 ? '#F5A623' : pts === 3 ? '#00C87A' : '#5B6E8C';
+                              return (
+                                <tr key={p.id} style={{ borderBottom: '1px solid rgba(21,33,54,0.3)' }}>
+                                  <td className="py-2 px-4 tabular-nums text-wc-dim">#{p.matchId}</td>
+                                  <td className="py-2 px-4 font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                                    {p.homeTeam} vs {p.awayTeam}
+                                  </td>
+                                  <td className="py-2 px-4 tabular-nums font-bold" style={{ color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                                    {p.homeScorePredicted} – {p.awayScorePredicted}
+                                  </td>
+                                  <td className="py-2 px-4 tabular-nums text-wc-muted">
+                                    {p.homeScoreActual !== null && p.awayScoreActual !== null
+                                      ? `${p.homeScoreActual} – ${p.awayScoreActual}`
+                                      : p.matchStatus === 'finished' ? '? – ?' : '—'}
+                                  </td>
+                                  <td className="py-2 px-4">
+                                    <span className="font-bold tabular-nums px-1.5 py-0.5 rounded"
+                                      style={{ background: `${ptsColor}1a`, color: ptsColor, fontFamily: 'Barlow Condensed, sans-serif' }}>
+                                      {pts} pts
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-4 tabular-nums text-wc-dim">
+                                    {new Date(p.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                    {' '}
+                                    {new Date(p.updatedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LeaderboardAdmin() {
+  const [entries, setEntries]   = useState<{ rank: number; userId: string; totalPoints: number; username?: string }[]>([]);
+  const [userMap, setUserMap]   = useState<Map<string, { name: string | null; email: string; phone: string | null; createdAt: string }>>(new Map());
+  const [loading, setLoading]   = useState(true);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [confirm, setConfirm]   = useState<string | null>(null);
+  const [error, setError]       = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const [lb, users] = await Promise.all([
+        fetch('/api/leaderboard').then((r) => r.json()) as Promise<{ rank: number; userId: string; totalPoints: number; username: string }[]>,
+        adminFetchUsers(),
+      ]);
+      setEntries(Array.isArray(lb) ? lb : []);
+      const map = new Map(users.map((u) => [u.id, { name: u.name, email: u.email, phone: u.phone, createdAt: u.createdAt }]));
+      setUserMap(map);
+    } catch { setEntries([]); } finally { setLoading(false); }
   }
 
-  const inputStyle: React.CSSProperties = { background: 'rgba(21,33,54,0.8)', border: '1px solid rgba(91,110,140,0.3)', borderRadius: 8, color: '#E8EDF5', padding: '6px 12px', fontSize: 12, fontFamily: 'Barlow Condensed, sans-serif' };
+  useEffect(() => { load(); }, []);
+
+  async function handleRemove(userId: string) {
+    if (confirm !== userId) { setConfirm(userId); return; }
+    setRemoving(userId);
+    setError(null);
+    try {
+      await adminRemoveFromLeaderboard(userId);
+      setEntries((prev) => prev.filter((e) => e.userId !== userId));
+      setConfirm(null);
+    } catch (err: any) {
+      setError(err?.response?.data?.error ?? 'Error al eliminar');
+    } finally { setRemoving(null); }
+  }
 
   if (loading) return <div className="animate-pulse h-24 rounded-xl" style={{ background: 'rgba(21,33,54,0.6)' }} />;
 
   return (
     <div className="card overflow-hidden">
-      <div className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid rgba(21,33,54,0.8)' }}>
-        <input placeholder="Filtrar por usuario…" value={filterUser} onChange={(e) => setFilterUser(e.target.value)} style={{ ...inputStyle, flex: '1 1 140px' }} />
-        <input placeholder="Filtrar por partido ID…" value={filterMatch} onChange={(e) => setFilterMatch(e.target.value)} style={{ ...inputStyle, flex: '1 1 140px' }} />
-        <span className="text-xs text-wc-muted ml-auto" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>{filtered.length} predicciones</span>
-        <button onClick={exportCsv}
-          className="rounded-lg px-4 py-1.5 text-xs font-bold uppercase"
-          style={{ background: 'rgba(0,200,122,0.1)', border: '1px solid rgba(0,200,122,0.25)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>
-          ↓ CSV
-        </button>
+      <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid rgba(21,33,54,0.8)' }}>
+        <span className="text-xs font-bold text-wc-muted uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>
+          Gestionar Ranking
+        </span>
+        <span className="text-xs text-wc-dim ml-auto">{entries.length} participantes</span>
       </div>
-      {filtered.length === 0 ? (
-        <div className="py-12 text-center text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>No hay predicciones.</div>
+      {error && (
+        <div className="mx-4 mt-3 px-3 py-2 rounded-lg text-xs text-red-400" style={{ background: 'rgba(240,62,62,0.1)', border: '1px solid rgba(240,62,62,0.2)', fontFamily: 'Barlow Condensed, sans-serif' }}>
+          {error}
+        </div>
+      )}
+      {entries.length === 0 ? (
+        <div className="py-12 text-center text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>El ranking está vacío.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(21,33,54,0.8)', background: 'rgba(245,166,35,0.04)' }}>
-                {['USUARIO', 'PARTIDO', 'PREDICCIÓN', 'PUNTOS', 'ACTUALIZADO'].map((h) => (
+                {['#', 'USUARIO', 'NOMBRE', 'EMAIL', 'TELÉFONO', 'REGISTRO', 'PUNTOS', 'ACCIÓN'].map((h) => (
                   <th key={h} className="py-3 px-4 text-left text-xs font-bold text-wc-muted"
                     style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
-                <tr key={p.id} style={{ borderBottom: '1px solid rgba(21,33,54,0.5)' }}>
-                  <td className="py-2 px-4">
-                    <div className="text-xs font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>{p.username}</div>
-                    {p.name && <div className="text-xs text-wc-dim">{p.name}</div>}
-                  </td>
-                  <td className="py-2 px-4 text-xs text-wc-muted tabular-nums">#{p.matchId}</td>
-                  <td className="py-2 px-4 text-xs font-bold tabular-nums" style={{ color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                    {p.homeScorePredicted} – {p.awayScorePredicted}
-                  </td>
-                  <td className="py-2 px-4">
-                    <span className="text-xs font-bold tabular-nums px-2 py-0.5 rounded"
-                      style={{ background: p.pointsEarned > 0 ? 'rgba(0,200,122,0.12)' : 'rgba(91,110,140,0.1)', color: p.pointsEarned > 0 ? '#00C87A' : '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                      {p.pointsEarned} pts
-                    </span>
-                  </td>
-                  <td className="py-2 px-4 text-xs text-wc-dim tabular-nums" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
-                    {new Date(p.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' } as any)}
-                  </td>
-                </tr>
-              ))}
+              {entries.map((e) => {
+                const info = userMap.get(e.userId);
+                return (
+                  <tr key={e.userId} style={{ borderBottom: '1px solid rgba(21,33,54,0.5)' }}>
+                    <td className="py-3 px-4 tabular-nums text-wc-dim text-xs">{e.rank}</td>
+                    <td className="py-3 px-4 text-xs font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      {e.username ?? e.userId}
+                    </td>
+                    <td className="py-3 px-4 text-xs text-wc-muted">{info?.name ?? '—'}</td>
+                    <td className="py-3 px-4 text-xs text-wc-dim font-mono">{info?.email ?? '—'}</td>
+                    <td className="py-3 px-4 text-xs text-wc-muted">{info?.phone ?? '—'}</td>
+                    <td className="py-3 px-4 text-xs text-wc-muted tabular-nums" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      {info?.createdAt ? new Date(info.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' }) : '—'}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs font-bold tabular-nums px-2 py-0.5 rounded"
+                        style={{ background: 'rgba(0,200,122,0.1)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        {e.totalPoints} pts
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      {confirm === e.userId ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-red-400" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>¿Confirmar?</span>
+                          <button
+                            onClick={() => handleRemove(e.userId)}
+                            disabled={removing === e.userId}
+                            className="rounded px-2 py-0.5 text-xs font-bold"
+                            style={{ background: 'rgba(240,62,62,0.2)', color: '#F03E3E', border: '1px solid rgba(240,62,62,0.3)', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                            {removing === e.userId ? '...' : 'Sí, eliminar'}
+                          </button>
+                          <button
+                            onClick={() => setConfirm(null)}
+                            className="rounded px-2 py-0.5 text-xs"
+                            style={{ background: 'rgba(91,110,140,0.2)', color: '#5B6E8C', border: '1px solid rgba(91,110,140,0.3)', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleRemove(e.userId)}
+                          className="rounded px-3 py-1 text-xs font-bold uppercase transition-colors"
+                          style={{ background: 'rgba(240,62,62,0.08)', color: '#F03E3E', border: '1px solid rgba(240,62,62,0.2)', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>
+                          Quitar del ranking
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -541,7 +769,7 @@ export default function AdminPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'matches' | 'audit' | 'bonus' | 'users' | 'codes' | 'predictions'>('matches');
+  const [tab, setTab] = useState<'matches' | 'audit' | 'bonus' | 'users' | 'codes' | 'predictions' | 'ranking'>('matches');
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') { navigate('/'); return; }
@@ -573,6 +801,7 @@ export default function AdminPage() {
         <button className={pillBase} style={tab === 'matches' ? activeStyle : inactiveStyle} onClick={() => setTab('matches')}>Partidos</button>
         <button className={pillBase} style={tab === 'audit' ? activeStyle : inactiveStyle} onClick={() => setTab('audit')}>Audit Log</button>
         <button className={pillBase} style={tab === 'predictions' ? activeStyle : inactiveStyle} onClick={() => setTab('predictions')}>📋 Predicciones</button>
+        <button className={pillBase} style={tab === 'ranking' ? activeStyle : inactiveStyle} onClick={() => setTab('ranking')}>🏅 Ranking</button>
         <button className={pillBase} style={tab === 'bonus' ? activeStyle : inactiveStyle} onClick={() => setTab('bonus')}>🏆 Gol de Oro</button>
         <button className={pillBase} style={tab === 'users' ? activeStyle : inactiveStyle} onClick={() => setTab('users')}>👥 Usuarios</button>
         <button className={pillBase} style={tab === 'codes' ? activeStyle : inactiveStyle} onClick={() => setTab('codes')}>🎟 Códigos</button>
@@ -594,6 +823,8 @@ export default function AdminPage() {
       {!loading && tab === 'codes' && <InviteCodesAdmin />}
 
       {!loading && tab === 'predictions' && <PredictionsAdmin />}
+
+      {!loading && tab === 'ranking' && <LeaderboardAdmin />}
 
       {!loading && tab === 'matches' && (
         <div className="card overflow-hidden">

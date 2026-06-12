@@ -7,7 +7,7 @@ import { writeAuditLog } from '../clients/auditClient';
 
 export async function listUsersController(_req: AdminRequest, res: Response): Promise<void> {
   const users = await prisma.user.findMany({
-    select: { id: true, username: true, name: true, email: true, isAdmin: true, createdAt: true },
+    select: { id: true, username: true, name: true, email: true, phone: true, isAdmin: true, createdAt: true },
     orderBy: { createdAt: 'asc' },
   });
   res.json(users);

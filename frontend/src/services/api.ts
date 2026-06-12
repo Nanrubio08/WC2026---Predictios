@@ -153,7 +153,7 @@ export async function adminDeclareWinner(winner: string): Promise<{ winner: stri
   return res.data;
 }
 
-export async function adminFetchUsers(): Promise<{ id: string; username: string; name: string | null; email: string; isAdmin: boolean; createdAt: string }[]> {
+export async function adminFetchUsers(): Promise<{ id: string; username: string; name: string | null; email: string; phone: string | null; isAdmin: boolean; createdAt: string }[]> {
   const res = await api.get('/api/admin/users');
   return Array.isArray(res.data) ? res.data : [];
 }
@@ -173,6 +173,42 @@ export async function adminFetchAllPredictions(): Promise<AdminPrediction[]> {
   const res = await api.get<AdminPrediction[]>('/api/admin/predictions/all');
   return Array.isArray(res.data) ? res.data : [];
 }
+
+export interface AdminPredictionDetail {
+  id: string;
+  matchId: number;
+  homeTeam: string;
+  awayTeam: string;
+  homeLogoUrl: string | null;
+  awayLogoUrl: string | null;
+  kickoffTime: string | null;
+  matchStatus: string | null;
+  homeScoreActual: number | null;
+  awayScoreActual: number | null;
+  homeScorePredicted: number;
+  awayScorePredicted: number;
+  pointsEarned: number;
+  updatedAt: string;
+}
+
+export interface AdminUserPredictionSummary {
+  userId: string;
+  username: string;
+  name: string | null;
+  email: string;
+  totalPredictions: number;
+  predictions: AdminPredictionDetail[];
+}
+
+export async function adminFetchPredictionsByUser(): Promise<AdminUserPredictionSummary[]> {
+  const res = await api.get<AdminUserPredictionSummary[]>('/api/admin/predictions/by-user');
+  return Array.isArray(res.data) ? res.data : [];
+}
+
+export async function adminRemoveFromLeaderboard(userId: string): Promise<void> {
+  await api.delete(`/api/admin/leaderboard/${userId}`);
+}
+
 
 export type InviteCodeRow = { code: string; status: 'used' | 'available'; username: string | null; email: string | null; usedAt: string | null; createdAt: string };
 
