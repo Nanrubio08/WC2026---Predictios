@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminExportLeaderboardCsv, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminUpdateUser, adminDeleteUser, adminFetchInviteCodes, adminGenerateCodes, adminExportInviteCodesCsv, adminFetchPredictionsByUser, adminRemoveFromLeaderboard, type InviteCodeRow, type AdminUserPredictionSummary } from '../services/api';
+import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminExportLeaderboardCsv, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminUpdateUser, adminDeleteUser, adminFetchInviteCodes, adminGenerateCodes, adminExportInviteCodesCsv, adminFetchPredictionsByUser, adminRemoveFromLeaderboard, adminFetchBonusAnswers, type InviteCodeRow, type AdminUserPredictionSummary, type AdminBonusAnswer } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { Match, AuditLog } from '../types';
 
@@ -90,11 +90,22 @@ function GoldenBallAdmin() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Answers view state
+  const [answers, setAnswers] = useState<AdminBonusAnswer[]>([]);
+  const [answersLoading, setAnswersLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'answered' | 'missing'>('all');
+  const [filterText, setFilterText] = useState('');
+
   useEffect(() => {
     adminGetBonusConfig()
       .then((c) => { setCurrentWinner(c.winner); setSelected(c.winner ?? ''); })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    adminFetchBonusAnswers()
+      .then(setAnswers)
+      .catch(() => {})
+      .finally(() => setAnswersLoading(false));
   }, []);
 
   async function handleDeclare(e: React.FormEvent) {
@@ -109,6 +120,8 @@ function GoldenBallAdmin() {
       const res = await adminDeclareWinner(selected);
       setCurrentWinner(res.winner);
       setMessage(res.message);
+      // Refresh answers to show updated points
+      adminFetchBonusAnswers().then(setAnswers).catch(() => {});
     } catch (err: any) {
       setError(err?.response?.data?.error ?? 'Error al declarar ganador.');
     } finally {
@@ -116,50 +129,188 @@ function GoldenBallAdmin() {
     }
   }
 
+  const inputStyle: React.CSSProperties = {
+    background: 'rgba(21,33,54,0.8)', border: '1px solid rgba(91,110,140,0.3)',
+    borderRadius: 8, color: '#E8EDF5', padding: '6px 12px',
+    fontSize: 12, fontFamily: 'Barlow Condensed, sans-serif',
+  };
+
+  const totalAnswered = answers.filter((a) => a.answer !== null).length;
+  const totalMissing  = answers.filter((a) => a.answer === null).length;
+
+  const filteredAnswers = answers.filter((a) => {
+    const statusOk =
+      filterStatus === 'all' ||
+      (filterStatus === 'answered' && a.answer !== null) ||
+      (filterStatus === 'missing' && a.answer === null);
+    const text = filterText.toLowerCase();
+    const textOk =
+      !text ||
+      a.username.toLowerCase().includes(text) ||
+      (a.name ?? '').toLowerCase().includes(text) ||
+      a.email.toLowerCase().includes(text) ||
+      (a.answer ?? '').toLowerCase().includes(text);
+    return statusOk && textOk;
+  });
+
   if (loading) return <div className="animate-pulse h-24 rounded-xl" style={{ background: 'rgba(21,33,54,0.6)' }} />;
 
   return (
-    <div className="card p-5 space-y-4">
-      <div className="flex items-center gap-3">
-        <span className="text-2xl">🏆</span>
-        <div>
-          <h3 className="font-black text-wc-text uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>Gol de Oro — Declarar Campeón</h3>
-          <p className="text-xs text-wc-muted">Otorga 30 pts a todos los usuarios que eligieron este equipo. Irreversible.</p>
+    <div className="space-y-5">
+      {/* ── Declare champion card ── */}
+      <div className="card p-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🏆</span>
+          <div>
+            <h3 className="font-black text-wc-text uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>Gol de Oro — Declarar Campeón</h3>
+            <p className="text-xs text-wc-muted">Otorga 30 pts a todos los usuarios que eligieron este equipo. Irreversible.</p>
+          </div>
         </div>
+
+        {currentWinner && (
+          <div className="rounded-lg px-4 py-2 text-sm font-bold text-center"
+            style={{ background: 'rgba(245,166,35,0.12)', border: '1px solid rgba(245,166,35,0.3)', color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
+            🥇 Campeón declarado: {currentWinner}
+          </div>
+        )}
+
+        <form onSubmit={handleDeclare} className="flex gap-3 flex-wrap items-end">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-xs font-bold text-wc-muted mb-1"
+              style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Equipo campeón
+            </label>
+            <select
+              value={selected}
+              onChange={(e) => setSelected(e.target.value)}
+              className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-wc-text focus:outline-none"
+              style={{ background: '#0D1829', border: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif' }}
+            >
+              <option value="">— Selecciona el campeón —</option>
+              {WC_TEAMS.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <button type="submit" disabled={!selected || saving}
+            className="rounded-lg px-5 py-2 text-sm font-black uppercase"
+            style={{ background: saving ? 'rgba(245,166,35,0.1)' : 'linear-gradient(135deg,#F5A623 0%,#E8920F 100%)', color: '#04070E', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', opacity: !selected || saving ? 0.6 : 1 }}>
+            {saving ? 'Procesando…' : 'Declarar Campeón'}
+          </button>
+        </form>
+
+        {message && <p className="text-xs text-center" style={{ color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>✓ {message}</p>}
+        {error && <p className="text-xs text-red-400 text-center">{error}</p>}
       </div>
 
-      {currentWinner && (
-        <div className="rounded-lg px-4 py-2 text-sm font-bold text-center"
-          style={{ background: 'rgba(245,166,35,0.12)', border: '1px solid rgba(245,166,35,0.3)', color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
-          🥇 Campeón declarado: {currentWinner}
-        </div>
-      )}
+      {/* ── Bonus answers table ── */}
+      <div className="card overflow-hidden">
+        <div className="px-5 pt-5 pb-3 space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="text-lg">🎯</span>
+            <div>
+              <h3 className="font-black text-wc-text uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>Predicciones de usuarios</h3>
+              <p className="text-xs text-wc-muted">¿Quién ganará el Mundial 2026?</p>
+            </div>
+            {/* Summary badges */}
+            <div className="ml-auto flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full"
+                style={{ background: 'rgba(0,200,122,0.1)', border: '1px solid rgba(0,200,122,0.2)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                ✓ {totalAnswered} respondieron
+              </span>
+              {totalMissing > 0 && (
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full"
+                  style={{ background: 'rgba(240,62,62,0.1)', border: '1px solid rgba(240,62,62,0.25)', color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  ✗ {totalMissing} sin respuesta
+                </span>
+              )}
+            </div>
+          </div>
 
-      <form onSubmit={handleDeclare} className="flex gap-3 flex-wrap items-end">
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-bold text-wc-muted mb-1"
-            style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            Equipo campeón
-          </label>
-          <select
-            value={selected}
-            onChange={(e) => setSelected(e.target.value)}
-            className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-wc-text focus:outline-none"
-            style={{ background: '#0D1829', border: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif' }}
-          >
-            <option value="">— Selecciona el campeón —</option>
-            {WC_TEAMS.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
+          {/* Filters */}
+          <div className="flex gap-2 flex-wrap">
+            <input
+              type="text"
+              placeholder="Buscar usuario, email o equipo…"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              style={{ ...inputStyle, flex: '1 1 200px' }}
+            />
+            {(['all', 'answered', 'missing'] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setFilterStatus(s)}
+                className="rounded-full px-3 py-1 text-xs font-bold uppercase transition-all"
+                style={filterStatus === s
+                  ? { background: 'linear-gradient(135deg,#F5A623,#E8920F)', color: '#04070E', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }
+                  : { background: 'rgba(21,33,54,0.8)', border: '1px solid rgba(91,110,140,0.3)', color: '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}
+              >
+                {s === 'all' ? 'Todos' : s === 'answered' ? 'Respondieron' : 'Sin respuesta'}
+              </button>
+            ))}
+            <span className="ml-auto self-center text-xs text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+              {filteredAnswers.length} usuario{filteredAnswers.length !== 1 ? 's' : ''}
+            </span>
+          </div>
         </div>
-        <button type="submit" disabled={!selected || saving}
-          className="rounded-lg px-5 py-2 text-sm font-black uppercase"
-          style={{ background: saving ? 'rgba(245,166,35,0.1)' : 'linear-gradient(135deg,#F5A623 0%,#E8920F 100%)', color: '#04070E', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', opacity: !selected || saving ? 0.6 : 1 }}>
-          {saving ? 'Procesando…' : 'Declarar Campeón'}
-        </button>
-      </form>
 
-      {message && <p className="text-xs text-center" style={{ color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>✓ {message}</p>}
-      {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+        {answersLoading ? (
+          <div className="space-y-2 px-5 pb-5">
+            {Array.from({ length: 5 }).map((_, i) => <div key={i} className="animate-pulse h-10 rounded-lg" style={{ background: 'rgba(21,33,54,0.6)' }} />)}
+          </div>
+        ) : filteredAnswers.length === 0 ? (
+          <div className="py-12 text-center text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            No hay usuarios para mostrar.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ borderTop: '1px solid rgba(21,33,54,0.8)', borderBottom: '1px solid rgba(21,33,54,0.8)', background: 'rgba(245,166,35,0.04)' }}>
+                  {['USUARIO', 'NOMBRE', 'EMAIL', 'PREDICCIÓN', 'PUNTOS', 'FECHA'].map((h) => (
+                    <th key={h} className="py-3 px-4 text-left text-xs font-bold text-wc-muted"
+                      style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAnswers.map((a) => {
+                  const hasPrediction = a.answer !== null;
+                  return (
+                    <tr key={a.userId} style={{ borderBottom: '1px solid rgba(21,33,54,0.5)', background: hasPrediction ? undefined : 'rgba(240,62,62,0.03)' }}>
+                      <td className="py-3 px-4 text-xs font-bold" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: hasPrediction ? '#E8EDF5' : '#F03E3E' }}>
+                        {a.username}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-wc-muted">{a.name ?? '—'}</td>
+                      <td className="py-3 px-4 text-xs text-wc-dim font-mono">{a.email}</td>
+                      <td className="py-3 px-4">
+                        {hasPrediction ? (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded"
+                            style={{ background: currentWinner && a.answer === currentWinner ? 'rgba(245,166,35,0.15)' : 'rgba(0,200,122,0.08)', border: `1px solid ${currentWinner && a.answer === currentWinner ? 'rgba(245,166,35,0.3)' : 'rgba(0,200,122,0.2)'}`, color: currentWinner && a.answer === currentWinner ? '#F5A623' : '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
+                            {currentWinner && a.answer === currentWinner && '🥇 '}{a.answer}
+                          </span>
+                        ) : (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded"
+                            style={{ background: 'rgba(240,62,62,0.1)', border: '1px solid rgba(240,62,62,0.2)', color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                            Sin respuesta
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-xs tabular-nums font-bold"
+                        style={{ color: a.points > 0 ? '#F5A623' : '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        {a.points > 0 ? `+${a.points} pts` : '—'}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-wc-muted tabular-nums" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        {a.submittedAt
+                          ? new Date(a.submittedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -338,15 +489,17 @@ function UsersAdmin() {
 
 function PredictionsAdmin() {
   const [data, setData]         = useState<AdminUserPredictionSummary[]>([]);
+  const [matches, setMatches]   = useState<Match[]>([]);
   const [loading, setLoading]   = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [filterUser, setFilterUser]   = useState('');
   const [filterMatch, setFilterMatch] = useState('');
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [nextMatchOpen, setNextMatchOpen] = useState(true);
 
   useEffect(() => {
-    adminFetchPredictionsByUser()
-      .then(setData)
+    Promise.all([adminFetchPredictionsByUser(), adminFetchMatches()])
+      .then(([predictions, m]) => { setData(predictions); setMatches(m); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -359,10 +512,32 @@ function PredictionsAdmin() {
     });
   };
 
+  // Next scheduled match (closest kickoff in the future)
+  const nextMatch = useMemo(() => {
+    const now = Date.now();
+    return matches
+      .filter((m) => m.status === 'scheduled' && new Date(m.kickoffTime).getTime() > now)
+      .sort((a, b) => new Date(a.kickoffTime).getTime() - new Date(b.kickoffTime).getTime())[0] ?? null;
+  }, [matches]);
+
+  // Which users have/haven't predicted for the next match
+  const { usersWithPrediction, usersWithout } = useMemo(() => {
+    if (!nextMatch) return { usersWithPrediction: [], usersWithout: [] };
+    const with_: typeof data = [];
+    const without: typeof data = [];
+    for (const u of data) {
+      if (u.predictions.some((p) => p.matchId === nextMatch.id)) {
+        with_.push(u);
+      } else {
+        without.push(u);
+      }
+    }
+    return { usersWithPrediction: with_, usersWithout: without };
+  }, [data, nextMatch]);
+
   const allUsers   = data.map((u) => ({ id: u.userId, label: u.username }));
   const allMatches = Array.from(new Set(data.flatMap((u) => u.predictions.map((p) => p.matchId)))).sort((a, b) => a - b);
 
-  // Collect all unique days from all predictions
   const availableDays = useMemo(() => {
     const days = new Set(
       data.flatMap((u) => u.predictions.map((p) => getMatchDay(p.kickoffTime))).filter((d): d is number => d !== null),
@@ -389,134 +564,277 @@ function PredictionsAdmin() {
   const usersWithZero    = data.filter((u) => u.totalPredictions === 0).length;
 
   return (
-    <div className="card overflow-hidden">
-      {/* Filters + stats bar */}
-      <div className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid rgba(21,33,54,0.8)' }}>
-        <select value={filterUser} onChange={(e) => setFilterUser(e.target.value)} style={{ ...inputStyle, flex: '1 1 150px' }}>
-          <option value="">Todos los usuarios</option>
-          {allUsers.map((u) => <option key={u.id} value={u.id}>{u.label}</option>)}
-        </select>
-        <select value={filterMatch} onChange={(e) => setFilterMatch(e.target.value)} style={{ ...inputStyle, flex: '1 1 150px' }}>
-          <option value="">Todos los partidos</option>
-          {allMatches.map((id) => {
-            const pred = data.flatMap((u) => u.predictions).find((p) => p.matchId === id);
-            return <option key={id} value={String(id)}>#{id} {pred ? `${pred.homeTeam} vs ${pred.awayTeam}` : ''}</option>;
-          })}
-        </select>
-        {availableDays.length > 0 && (
-          <select
-            value={selectedDay ?? ''}
-            onChange={(e) => setSelectedDay(e.target.value === '' ? null : Number(e.target.value))}
-            style={{ ...inputStyle, flex: '1 1 120px' }}
+    <div className="space-y-4">
+
+      {/* ── Next match coverage panel ── */}
+      {nextMatch && (
+        <div className="card overflow-hidden">
+          {/* Header */}
+          <div
+            className="flex items-center gap-3 px-5 py-4 cursor-pointer hover:bg-white/5 transition-colors"
+            onClick={() => setNextMatchOpen((o) => !o)}
           >
-            <option value="">Todos los días</option>
-            {availableDays.map((day) => <option key={day} value={day}>Día {day}</option>)}
-          </select>
-        )}
-        <span className="text-xs text-wc-muted ml-auto" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
-          {totalPredictions} predicciones · {filtered.length} usuarios
-          {usersWithZero > 0 && <span className="text-red-400 ml-2">⚠ {usersWithZero} sin predicciones</span>}
-        </span>
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="py-12 text-center text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>No hay datos.</div>
-      ) : (
-        <div>
-          {filtered.map((u) => {
-            const isOpen = expanded.has(u.userId);
-            const visiblePredictions = u.predictions.filter((p) => {
-              const matchOk = !filterMatch || p.matchId === Number(filterMatch);
-              const dayOk   = selectedDay === null || getMatchDay(p.kickoffTime) === selectedDay;
-              return matchOk && dayOk;
-            });
-            const totalPts = visiblePredictions.reduce((s, p) => s + (p.pointsEarned ?? 0), 0);
-            const hasZero  = u.totalPredictions === 0;
-
-            return (
-              <div key={u.userId}>
-                <div
-                  className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5"
-                  style={{ borderBottom: '1px solid rgba(21,33,54,0.6)', background: hasZero ? 'rgba(240,62,62,0.04)' : undefined }}
-                  onClick={() => toggleExpand(u.userId)}
-                >
-                  <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 13, fontWeight: 700, color: hasZero ? '#F03E3E' : '#E8EDF5', letterSpacing: '0.03em' }}>
-                    {u.username}
-                  </span>
-                  {u.name && <span className="text-xs text-wc-dim">{u.name}</span>}
-                  <span className="ml-auto text-xs font-bold tabular-nums px-2 py-0.5 rounded"
-                    style={{ background: hasZero ? 'rgba(240,62,62,0.12)' : 'rgba(91,110,140,0.15)', color: hasZero ? '#F03E3E' : '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                    {u.totalPredictions} pred.
-                  </span>
-                  {totalPts > 0 && (
-                    <span className="text-xs font-bold tabular-nums px-2 py-0.5 rounded"
-                      style={{ background: 'rgba(0,200,122,0.1)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                      {totalPts} pts
-                    </span>
-                  )}
-                  <span className="text-wc-dim text-xs ml-1">{isOpen ? '▲' : '▼'}</span>
-                </div>
-
-                {isOpen && (
-                  <div style={{ background: 'rgba(4,7,14,0.4)', borderBottom: '1px solid rgba(21,33,54,0.8)' }}>
-                    {visiblePredictions.length === 0 ? (
-                      <div className="px-6 py-4 text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
-                        {hasZero ? 'Este usuario no ha ingresado predicciones.' : 'Sin predicciones para el filtro seleccionado.'}
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr style={{ borderBottom: '1px solid rgba(21,33,54,0.6)' }}>
-                              {['PARTIDO', 'EQUIPOS', 'PREDICCIÓN', 'RESULTADO', 'PTS', 'INGRESADO'].map((h) => (
-                                <th key={h} className="py-2 px-4 text-left font-bold text-wc-muted"
-                                  style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>{h}</th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {visiblePredictions.map((p) => {
-                              const pts = p.pointsEarned ?? 0;
-                              const ptsColor = pts === 5 ? '#F5A623' : pts === 3 ? '#00C87A' : '#5B6E8C';
-                              return (
-                                <tr key={p.id} style={{ borderBottom: '1px solid rgba(21,33,54,0.3)' }}>
-                                  <td className="py-2 px-4 tabular-nums text-wc-dim">#{p.matchId}</td>
-                                  <td className="py-2 px-4 font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
-                                    {p.homeTeam} vs {p.awayTeam}
-                                  </td>
-                                  <td className="py-2 px-4 tabular-nums font-bold" style={{ color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                                    {p.homeScorePredicted} – {p.awayScorePredicted}
-                                  </td>
-                                  <td className="py-2 px-4 tabular-nums text-wc-muted">
-                                    {p.homeScoreActual !== null && p.awayScoreActual !== null
-                                      ? `${p.homeScoreActual} – ${p.awayScoreActual}`
-                                      : p.matchStatus === 'finished' ? '? – ?' : '—'}
-                                  </td>
-                                  <td className="py-2 px-4">
-                                    <span className="font-bold tabular-nums px-1.5 py-0.5 rounded"
-                                      style={{ background: `${ptsColor}1a`, color: ptsColor, fontFamily: 'Barlow Condensed, sans-serif' }}>
-                                      {pts} pts
-                                    </span>
-                                  </td>
-                                  <td className="py-2 px-4 tabular-nums text-wc-dim">
-                                    {new Date(p.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                    {' '}
-                                    {new Date(p.updatedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
+            <span className="text-lg">⏭</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-black text-wc-text uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>
+                  Próximo partido
+                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded"
+                  style={{ background: 'rgba(0,200,122,0.08)', border: '1px solid rgba(0,200,122,0.2)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  #{nextMatch.id}
+                </span>
+                <span className="text-sm font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
+                  {nextMatch.homeTeam} vs {nextMatch.awayTeam}
+                </span>
+                <span className="text-xs text-wc-muted">
+                  {new Date(nextMatch.kickoffTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                  {' · '}
+                  {new Date(nextMatch.kickoffTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
-            );
-          })}
+            </div>
+
+            {/* Summary badges */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full"
+                style={{ background: 'rgba(0,200,122,0.1)', border: '1px solid rgba(0,200,122,0.2)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                ✓ {usersWithPrediction.length}
+              </span>
+              {usersWithout.length > 0 && (
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full"
+                  style={{ background: 'rgba(240,62,62,0.12)', border: '1px solid rgba(240,62,62,0.3)', color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                  ✗ {usersWithout.length} sin pronóstico
+                </span>
+              )}
+              <span className="text-wc-dim text-xs ml-1">{nextMatchOpen ? '▲' : '▼'}</span>
+            </div>
+          </div>
+
+          {nextMatchOpen && (
+            <div style={{ borderTop: '1px solid rgba(21,33,54,0.8)' }}>
+              {/* Users WITHOUT prediction */}
+              {usersWithout.length > 0 && (
+                <div>
+                  <div className="px-5 py-2" style={{ background: 'rgba(240,62,62,0.04)', borderBottom: '1px solid rgba(240,62,62,0.1)' }}>
+                    <span className="text-xs font-bold uppercase text-red-400" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}>
+                      ✗ Sin pronóstico ({usersWithout.length})
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid rgba(21,33,54,0.6)', background: 'rgba(240,62,62,0.03)' }}>
+                          {['USUARIO', 'NOMBRE', 'EMAIL', 'TOTAL PRONÓS.'].map((h) => (
+                            <th key={h} className="py-2 px-5 text-left font-bold text-wc-muted"
+                              style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {usersWithout.sort((a, b) => a.username.localeCompare(b.username)).map((u) => (
+                          <tr key={u.userId} style={{ borderBottom: '1px solid rgba(21,33,54,0.4)', background: 'rgba(240,62,62,0.02)' }}>
+                            <td className="py-2.5 px-5 font-bold" style={{ color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif' }}>{u.username}</td>
+                            <td className="py-2.5 px-5 text-wc-muted">{u.name ?? '—'}</td>
+                            <td className="py-2.5 px-5 text-wc-dim font-mono">{u.email}</td>
+                            <td className="py-2.5 px-5">
+                              <span className="tabular-nums font-bold px-1.5 py-0.5 rounded"
+                                style={{ background: u.totalPredictions === 0 ? 'rgba(240,62,62,0.12)' : 'rgba(91,110,140,0.12)', color: u.totalPredictions === 0 ? '#F03E3E' : '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                                {u.totalPredictions} pred.
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Users WITH prediction */}
+              {usersWithPrediction.length > 0 && (
+                <div>
+                  <div className="px-5 py-2" style={{ background: 'rgba(0,200,122,0.03)', borderBottom: '1px solid rgba(0,200,122,0.08)', borderTop: usersWithout.length > 0 ? '1px solid rgba(21,33,54,0.8)' : undefined }}>
+                    <span className="text-xs font-bold uppercase" style={{ color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}>
+                      ✓ Con pronóstico ({usersWithPrediction.length})
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid rgba(21,33,54,0.6)', background: 'rgba(0,200,122,0.02)' }}>
+                          {['USUARIO', 'NOMBRE', 'PREDICCIÓN'].map((h) => (
+                            <th key={h} className="py-2 px-5 text-left font-bold text-wc-muted"
+                              style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {usersWithPrediction.sort((a, b) => a.username.localeCompare(b.username)).map((u) => {
+                          const pred = u.predictions.find((p) => p.matchId === nextMatch.id)!;
+                          return (
+                            <tr key={u.userId} style={{ borderBottom: '1px solid rgba(21,33,54,0.4)' }}>
+                              <td className="py-2.5 px-5 font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>{u.username}</td>
+                              <td className="py-2.5 px-5 text-wc-muted">{u.name ?? '—'}</td>
+                              <td className="py-2.5 px-5 font-bold tabular-nums" style={{ color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                                {pred.homeScorePredicted} – {pred.awayScorePredicted}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {usersWithout.length === 0 && (
+                <div className="px-5 py-4 text-center text-xs font-bold" style={{ color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>
+                  ✓ Todos los usuarios han ingresado su pronóstico para este partido.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
+
+      {/* ── Full predictions table ── */}
+      <div className="card overflow-hidden">
+        {/* Filters + stats bar */}
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid rgba(21,33,54,0.8)' }}>
+          <select value={filterUser} onChange={(e) => setFilterUser(e.target.value)} style={{ ...inputStyle, flex: '1 1 150px' }}>
+            <option value="">Todos los usuarios</option>
+            {allUsers.map((u) => <option key={u.id} value={u.id}>{u.label}</option>)}
+          </select>
+          <select value={filterMatch} onChange={(e) => setFilterMatch(e.target.value)} style={{ ...inputStyle, flex: '1 1 150px' }}>
+            <option value="">Todos los partidos</option>
+            {allMatches.map((id) => {
+              const pred = data.flatMap((u) => u.predictions).find((p) => p.matchId === id);
+              return <option key={id} value={String(id)}>#{id} {pred ? `${pred.homeTeam} vs ${pred.awayTeam}` : ''}</option>;
+            })}
+          </select>
+          {availableDays.length > 0 && (
+            <select
+              value={selectedDay ?? ''}
+              onChange={(e) => setSelectedDay(e.target.value === '' ? null : Number(e.target.value))}
+              style={{ ...inputStyle, flex: '1 1 120px' }}
+            >
+              <option value="">Todos los días</option>
+              {availableDays.map((day) => <option key={day} value={day}>Día {day}</option>)}
+            </select>
+          )}
+          <span className="text-xs text-wc-muted ml-auto" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+            {totalPredictions} predicciones · {filtered.length} usuarios
+            {usersWithZero > 0 && <span className="text-red-400 ml-2">⚠ {usersWithZero} sin predicciones</span>}
+          </span>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="py-12 text-center text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>No hay datos.</div>
+        ) : (
+          <div>
+            {filtered.map((u) => {
+              const isOpen = expanded.has(u.userId);
+              const visiblePredictions = u.predictions.filter((p) => {
+                const matchOk = !filterMatch || p.matchId === Number(filterMatch);
+                const dayOk   = selectedDay === null || getMatchDay(p.kickoffTime) === selectedDay;
+                return matchOk && dayOk;
+              });
+              const totalPts = visiblePredictions.reduce((s, p) => s + (p.pointsEarned ?? 0), 0);
+              const hasZero  = u.totalPredictions === 0;
+              const missingNext = nextMatch && !u.predictions.some((p) => p.matchId === nextMatch.id);
+
+              return (
+                <div key={u.userId}>
+                  <div
+                    className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-white/5"
+                    style={{ borderBottom: '1px solid rgba(21,33,54,0.6)', background: hasZero ? 'rgba(240,62,62,0.04)' : undefined }}
+                    onClick={() => toggleExpand(u.userId)}
+                  >
+                    <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 13, fontWeight: 700, color: hasZero ? '#F03E3E' : '#E8EDF5', letterSpacing: '0.03em' }}>
+                      {u.username}
+                    </span>
+                    {u.name && <span className="text-xs text-wc-dim">{u.name}</span>}
+                    {missingNext && (
+                      <span className="text-xs font-bold px-1.5 py-0.5 rounded"
+                        style={{ background: 'rgba(240,62,62,0.1)', border: '1px solid rgba(240,62,62,0.25)', color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
+                        ⚠ Sin pronóst. próx.
+                      </span>
+                    )}
+                    <span className="ml-auto text-xs font-bold tabular-nums px-2 py-0.5 rounded"
+                      style={{ background: hasZero ? 'rgba(240,62,62,0.12)' : 'rgba(91,110,140,0.15)', color: hasZero ? '#F03E3E' : '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      {u.totalPredictions} pred.
+                    </span>
+                    {totalPts > 0 && (
+                      <span className="text-xs font-bold tabular-nums px-2 py-0.5 rounded"
+                        style={{ background: 'rgba(0,200,122,0.1)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        {totalPts} pts
+                      </span>
+                    )}
+                    <span className="text-wc-dim text-xs ml-1">{isOpen ? '▲' : '▼'}</span>
+                  </div>
+
+                  {isOpen && (
+                    <div style={{ background: 'rgba(4,7,14,0.4)', borderBottom: '1px solid rgba(21,33,54,0.8)' }}>
+                      {visiblePredictions.length === 0 ? (
+                        <div className="px-6 py-4 text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                          {hasZero ? 'Este usuario no ha ingresado predicciones.' : 'Sin predicciones para el filtro seleccionado.'}
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr style={{ borderBottom: '1px solid rgba(21,33,54,0.6)' }}>
+                                {['PARTIDO', 'EQUIPOS', 'PREDICCIÓN', 'RESULTADO', 'PTS', 'INGRESADO'].map((h) => (
+                                  <th key={h} className="py-2 px-4 text-left font-bold text-wc-muted"
+                                    style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>{h}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {visiblePredictions.map((p) => {
+                                const pts = p.pointsEarned ?? 0;
+                                const ptsColor = pts === 5 ? '#F5A623' : pts === 3 ? '#00C87A' : '#5B6E8C';
+                                return (
+                                  <tr key={p.id} style={{ borderBottom: '1px solid rgba(21,33,54,0.3)' }}>
+                                    <td className="py-2 px-4 tabular-nums text-wc-dim">#{p.matchId}</td>
+                                    <td className="py-2 px-4 font-bold text-wc-text" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                                      {p.homeTeam} vs {p.awayTeam}
+                                    </td>
+                                    <td className="py-2 px-4 tabular-nums font-bold" style={{ color: '#F5A623', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                                      {p.homeScorePredicted} – {p.awayScorePredicted}
+                                    </td>
+                                    <td className="py-2 px-4 tabular-nums text-wc-muted">
+                                      {p.homeScoreActual !== null && p.awayScoreActual !== null
+                                        ? `${p.homeScoreActual} – ${p.awayScoreActual}`
+                                        : p.matchStatus === 'finished' ? '? – ?' : '—'}
+                                    </td>
+                                    <td className="py-2 px-4">
+                                      <span className="font-bold tabular-nums px-1.5 py-0.5 rounded"
+                                        style={{ background: `${ptsColor}1a`, color: ptsColor, fontFamily: 'Barlow Condensed, sans-serif' }}>
+                                        {pts} pts
+                                      </span>
+                                    </td>
+                                    <td className="py-2 px-4 tabular-nums text-wc-dim">
+                                      {new Date(p.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                      {' '}
+                                      {new Date(p.updatedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

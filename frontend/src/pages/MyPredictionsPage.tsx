@@ -118,32 +118,44 @@ export default function MyPredictionsPage() {
             const kickoff = m ? new Date(m.kickoffTime) : null;
             return (
               <div key={p.matchId} className="card p-4">
-                <div className="flex items-center gap-4">
-                  {/* Teams */}
-                  <div className="flex flex-1 items-center gap-3 min-w-0">
+                {/* Date + group row */}
+                <div className="mb-3 flex items-center gap-2">
+                  {kickoff && (
+                    <span className="text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      {kickoff.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </span>
+                  )}
+                  {m?.group && (
+                    <span className="text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
+                      · {m.group.replace('GROUP_', 'Gr. ')}
+                    </span>
+                  )}
+                  {/* Points badge pushed to right */}
+                  <div className="ml-auto shrink-0">
+                    {isFinished ? (
+                      <PointsBadge points={p.pointsEarned} />
+                    ) : (
+                      <span className="rounded-full px-2.5 py-1 text-xs font-bold"
+                        style={{ background: 'rgba(0,200,122,0.08)', border: '1px solid rgba(0,200,122,0.2)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>
+                        Pendiente
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Teams + score row: [Home] [Score/Prediction] [Away] */}
+                <div className="flex items-center gap-2">
+                  {/* Home team */}
+                  <div className="flex flex-1 flex-col items-center gap-1 min-w-0">
                     <TeamLogo src={m?.homeLogoUrl ?? null} alt={m?.homeTeam ?? '?'} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-bold text-wc-text uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
-                          {m?.homeTeam ?? '?'} vs {m?.awayTeam ?? '?'}
-                        </span>
-                        {m?.group && (
-                          <span className="text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
-                            {m.group.replace('GROUP_', 'Gr. ')}
-                          </span>
-                        )}
-                      </div>
-                      {kickoff && (
-                        <div className="text-xs text-wc-dim mt-0.5">
-                          {kickoff.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </div>
-                      )}
-                    </div>
-                    <TeamLogo src={m?.awayLogoUrl ?? null} alt={m?.awayTeam ?? '?'} />
+                    <span className="text-center text-xs font-bold text-wc-text uppercase leading-tight w-full"
+                      style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.03em' }}>
+                      {m?.homeTeam ?? '?'}
+                    </span>
                   </div>
 
-                  {/* Prediction vs result */}
-                  <div className="shrink-0 text-center space-y-1">
+                  {/* Score / Prediction (centre) */}
+                  <div className="shrink-0 text-center space-y-1 px-2">
                     <div className="text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}>TU PRON.</div>
                     <div className="font-black tabular-nums text-wc-text" style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.3rem', letterSpacing: '0.05em' }}>
                       {p.homeScorePredicted} – {p.awayScorePredicted}
@@ -155,16 +167,13 @@ export default function MyPredictionsPage() {
                     )}
                   </div>
 
-                  {/* Points */}
-                  <div className="shrink-0">
-                    {isFinished ? (
-                      <PointsBadge points={p.pointsEarned} />
-                    ) : (
-                      <span className="rounded-full px-2.5 py-1 text-xs font-bold"
-                        style={{ background: 'rgba(0,200,122,0.08)', border: '1px solid rgba(0,200,122,0.2)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                        Pendiente
-                      </span>
-                    )}
+                  {/* Away team */}
+                  <div className="flex flex-1 flex-col items-center gap-1 min-w-0">
+                    <TeamLogo src={m?.awayLogoUrl ?? null} alt={m?.awayTeam ?? '?'} />
+                    <span className="text-center text-xs font-bold text-wc-text uppercase leading-tight w-full"
+                      style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.03em' }}>
+                      {m?.awayTeam ?? '?'}
+                    </span>
                   </div>
                 </div>
               </div>

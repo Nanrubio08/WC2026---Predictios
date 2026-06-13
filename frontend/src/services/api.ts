@@ -205,6 +205,22 @@ export async function adminFetchPredictionsByUser(): Promise<AdminUserPrediction
   return Array.isArray(res.data) ? res.data : [];
 }
 
+export interface AdminBonusAnswer {
+  userId: string;
+  username: string;
+  name: string | null;
+  email: string;
+  answer: string | null;
+  points: number;
+  submittedAt: string | null;
+}
+
+export async function adminFetchBonusAnswers(): Promise<AdminBonusAnswer[]> {
+  const res = await api.get<AdminBonusAnswer[]>('/api/admin/bonus/answers');
+  return Array.isArray(res.data) ? res.data : [];
+}
+
+
 export async function adminRemoveFromLeaderboard(userId: string): Promise<void> {
   await api.delete(`/api/admin/leaderboard/${userId}`);
 }

@@ -106,7 +106,7 @@ export default function Navbar({ isAuthenticated, user, onLogin, onLogout }: Pro
             {navLink('/matches', 'Partidos')}
             {navLink('/groups', 'Grupos')}
             {navLink('/leaderboard', 'Posiciones')}
-            {isAuthenticated && navLink('/bonus', '🏆 Bonus')}
+            {isAuthenticated && navLink('/bonus', 'Gol de oro 🪙')}
             {isAuthenticated && navLink('/my-predictions', 'Mis Pronós.')}
             {user?.role === 'admin' && navLink('/admin', '⚙ Admin')}
           </nav>

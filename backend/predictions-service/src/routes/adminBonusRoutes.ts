@@ -1,12 +1,20 @@
 import { Router } from 'express';
 import { requireAdmin } from '../middleware/requireAdmin';
 import { declareWinnerController, getBonusConfigController } from '../controllers/adminBonusController';
+import { adminBonusAnswersController } from '../controllers/adminBonusAnswersController';
 
 const router = Router();
 
 router.get('/config', requireAdmin, (req, res) => {
   getBonusConfigController(req as any, res).catch((err) => {
     console.error('getBonusConfig error', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+});
+
+router.get('/answers', requireAdmin, (req, res) => {
+  adminBonusAnswersController(req, res).catch((err) => {
+    console.error('adminBonusAnswers error', err);
     res.status(500).json({ error: 'Internal server error' });
   });
 });

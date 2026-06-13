@@ -32,52 +32,89 @@ export default function LeaderboardTable({ entries, currentUserId }: Props) {
     <div>
       {/* ── Podium ── */}
       {top3.length >= 1 && (
-        <div className="mx-auto mb-10 flex items-end justify-center gap-3 max-w-lg px-2">
-          {/* 2nd place */}
-          <div className="flex-1 flex flex-col items-center gap-2">
-            <div className="text-3xl">{p2.label}</div>
-            <div className="w-full rounded-xl p-3 text-center"
-              style={{ background: p2.bg, border: `1px solid ${p2.border}`, minHeight: 100 }}>
-              <div className="mb-1 font-black truncate" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.05rem', color: p2.color, letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-                {top3[1]?.name ?? top3[1]?.username ?? '—'}
-              </div>
-              <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.6rem', color: p2.color, lineHeight: 1 }}>
-                {top3[1]?.totalPoints ?? 0}
-              </div>
-              <div className="text-xs text-wc-dim mt-0.5" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}>PTS</div>
-            </div>
+        <>
+          {/* Mobile: stacked list (shown below md) */}
+          <div className="mb-8 flex flex-col gap-3 md:hidden">
+            {top3.map((entry, i) => {
+              const rank = (i + 1) as 1 | 2 | 3;
+              const ps = PODIUM_STYLES[rank];
+              return (
+                <div key={entry.userId} className="flex items-center gap-4 rounded-xl px-4 py-3"
+                  style={{ background: ps.bg, border: `1px solid ${ps.border}` }}>
+                  <span className="text-3xl shrink-0">{ps.label}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-black leading-tight"
+                      style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.05rem', color: ps.color, letterSpacing: '0.03em', textTransform: 'uppercase', wordBreak: 'break-word' }}>
+                      {entry.name ?? entry.username}
+                    </div>
+                    {entry.name && (
+                      <div className="text-xs mt-0.5" style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#5B6E8C' }}>
+                        @{entry.username}
+                      </div>
+                    )}
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.8rem', color: ps.color, lineHeight: 1 }}>
+                      {entry.totalPoints}
+                    </div>
+                    <div className="text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}>PTS</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* 1st place — taller */}
-          <div className="flex-1 flex flex-col items-center gap-2">
-            <div className="text-4xl">{p1.label}</div>
-            <div className="w-full rounded-xl p-3 text-center gold-glow"
-              style={{ background: p1.bg, border: `1px solid ${p1.border}`, minHeight: 130 }}>
-              <div className="mb-1 font-black truncate" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.15rem', color: p1.color, letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-                {top3[0]?.name ?? top3[0]?.username ?? '—'}
+          {/* Desktop: tiered podium (shown from md up) */}
+          <div className="mx-auto mb-10 hidden md:flex items-end justify-center gap-3 max-w-lg px-2">
+            {/* 2nd place */}
+            <div className="flex-1 min-w-0 flex flex-col items-center gap-2">
+              <div className="text-3xl">{p2.label}</div>
+              <div className="w-full rounded-xl p-3 text-center flex flex-col justify-center"
+                style={{ background: p2.bg, border: `1px solid ${p2.border}`, minHeight: 115 }}>
+                <div className="w-full mb-1 font-black"
+                  style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.9rem', color: p2.color, letterSpacing: '0.03em', textTransform: 'uppercase', wordBreak: 'break-word', lineHeight: 1.25 }}>
+                  {top3[1]?.name ?? top3[1]?.username ?? '—'}
+                </div>
+                <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.6rem', color: p2.color, lineHeight: 1 }}>
+                  {top3[1]?.totalPoints ?? 0}
+                </div>
+                <div className="text-xs text-wc-dim mt-0.5" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}>PTS</div>
               </div>
-              <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '2rem', color: p1.color, lineHeight: 1 }}>
-                {top3[0]?.totalPoints ?? 0}
-              </div>
-              <div className="text-xs text-wc-dim mt-0.5" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}>PTS</div>
             </div>
-          </div>
 
-          {/* 3rd place */}
-          <div className="flex-1 flex flex-col items-center gap-2">
-            <div className="text-3xl">{p3.label}</div>
-            <div className="w-full rounded-xl p-3 text-center"
-              style={{ background: p3.bg, border: `1px solid ${p3.border}`, minHeight: 90 }}>
-              <div className="mb-1 font-black truncate" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.05rem', color: p3.color, letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-                {top3[2]?.name ?? top3[2]?.username ?? '—'}
+            {/* 1st place — taller */}
+            <div className="flex-1 min-w-0 flex flex-col items-center gap-2">
+              <div className="text-4xl">{p1.label}</div>
+              <div className="w-full rounded-xl p-3 text-center gold-glow flex flex-col justify-center"
+                style={{ background: p1.bg, border: `1px solid ${p1.border}`, minHeight: 150 }}>
+                <div className="w-full mb-1 font-black"
+                  style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1rem', color: p1.color, letterSpacing: '0.03em', textTransform: 'uppercase', wordBreak: 'break-word', lineHeight: 1.25 }}>
+                  {top3[0]?.name ?? top3[0]?.username ?? '—'}
+                </div>
+                <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '2rem', color: p1.color, lineHeight: 1 }}>
+                  {top3[0]?.totalPoints ?? 0}
+                </div>
+                <div className="text-xs text-wc-dim mt-0.5" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}>PTS</div>
               </div>
-              <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.6rem', color: p3.color, lineHeight: 1 }}>
-                {top3[2]?.totalPoints ?? 0}
+            </div>
+
+            {/* 3rd place */}
+            <div className="flex-1 min-w-0 flex flex-col items-center gap-2">
+              <div className="text-3xl">{p3.label}</div>
+              <div className="w-full rounded-xl p-3 text-center flex flex-col justify-center"
+                style={{ background: p3.bg, border: `1px solid ${p3.border}`, minHeight: 100 }}>
+                <div className="w-full mb-1 font-black"
+                  style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.9rem', color: p3.color, letterSpacing: '0.03em', textTransform: 'uppercase', wordBreak: 'break-word', lineHeight: 1.25 }}>
+                  {top3[2]?.name ?? top3[2]?.username ?? '—'}
+                </div>
+                <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.6rem', color: p3.color, lineHeight: 1 }}>
+                  {top3[2]?.totalPoints ?? 0}
+                </div>
+                <div className="text-xs text-wc-dim mt-0.5" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}>PTS</div>
               </div>
-              <div className="text-xs text-wc-dim mt-0.5" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em' }}>PTS</div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* ── Full table ── */}

@@ -102,7 +102,9 @@ export default function MatchCard({ match, isAuthenticated }: Props) {
   const kickoff = new Date(match.kickoffTime);
   const dateStr = kickoff.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
   const timeStr = kickoff.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  const canPredict = match.status === 'scheduled' && isAuthenticated;
+  const remaining = useCountdown(match.kickoffTime);
+  const isLocked = remaining <= 0;
+  const canPredict = match.status === 'scheduled' && isAuthenticated && !isLocked;
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
   const hasScore = match.homeScoreActual !== null && match.awayScoreActual !== null;
@@ -174,9 +176,17 @@ export default function MatchCard({ match, isAuthenticated }: Props) {
           </div>
         </div>
 
-        {/* Countdown to lock */}
+        {/* Countdown / lock indicator */}
         {match.status === 'scheduled' && (
-          <CountdownTimer kickoffTime={match.kickoffTime} />
+          isLocked ? (
+            <div className="mt-3 flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs"
+              style={{ background: 'rgba(91,110,140,0.08)', border: '1px solid rgba(91,110,140,0.2)', color: '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
+              <span>🔒</span>
+              <span className="font-bold">PRONÓSTICO CERRADO</span>
+            </div>
+          ) : (
+            <CountdownTimer kickoffTime={match.kickoffTime} />
+          )
         )}
 
         {/* User's prediction */}
@@ -225,7 +235,7 @@ export default function MatchCard({ match, isAuthenticated }: Props) {
         )}
 
         {/* Login to predict */}
-        {match.status === 'scheduled' && !isAuthenticated && (
+        {match.status === 'scheduled' && !isAuthenticated && !isLocked && (
           <div className="mt-4 text-center" style={{ borderTop: '1px solid #152136', paddingTop: '0.75rem' }}>
             <button
               className="text-xs font-bold uppercase tracking-wider transition-colors hover:text-wc-gold"

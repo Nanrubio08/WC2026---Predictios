@@ -66,7 +66,7 @@ const scoringRows = [
 const goldenBallRow = { result: '🏆 Gol de Oro', example: 'Eliges el campeón del torneo', points: 30, width: '100%', color: '#FFD700', glow: 'rgba(255,215,0,0.4)' };
 
 const faqs = [
-  { q: '¿Cuándo se cierran las predicciones?', a: '30 minutos antes del horario oficial del partido. Después de eso, el formulario desaparece y no se aceptan cambios.' },
+  { q: '¿Cuándo se cierran las predicciones?', a: '10 minutos antes del horario oficial del partido. Después de eso, el formulario desaparece y no se aceptan cambios.' },
   { q: '¿Puedo modificar mi predicción?', a: 'Sí, todas las veces que quieras hasta que se cierre la ventana de predicción.' },
   { q: '¿Cuándo se asignan los puntos?', a: 'Automáticamente una vez que el partido finaliza y se confirma el marcador final.' },
   { q: '¿Qué cuenta como resultado correcto?', a: 'Victoria local, victoria visitante o empate — según el resultado a los 90 minutos. No se tienen en cuenta el alargue ni los penaltis.' },
