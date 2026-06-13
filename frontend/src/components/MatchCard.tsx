@@ -46,7 +46,7 @@ function TeamLogo({ src, alt }: { src: string | null; alt: string }) {
   return <img src={src} alt={alt} className="h-10 w-10 object-contain" onError={() => setFailed(true)} />;
 }
 
-const LOCK_MINUTES = 30;
+const LOCK_MINUTES = 10;
 
 function useCountdown(kickoffTime: string) {
   const lockMs = new Date(kickoffTime).getTime() - LOCK_MINUTES * 60 * 1000;
@@ -81,7 +81,7 @@ function CountdownTimer({ kickoffTime }: { kickoffTime: string }) {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
-  const isUrgent = remaining < 30 * 60 * 1000; // less than 30min
+  const isUrgent = remaining < 10 * 60 * 1000; // less than 10min
   const color = isUrgent ? '#F03E3E' : '#F5A623';
 
   const pad = (n: number) => String(n).padStart(2, '0');

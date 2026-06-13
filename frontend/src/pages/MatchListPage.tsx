@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import MatchCard from '../components/MatchCard';
-import { fetchMatches } from '../services/api';
+import { fetchMatches, fetchMyPredictions } from '../services/api';
 import type { Match } from '../types';
 
 interface Props {
@@ -66,13 +66,34 @@ export default function MatchListPage({ isAuthenticated }: Props) {
     setLoading(true);
     setError(null);
 
-    fetchMatches()
+    const loadMatches = async (): Promise<Match[]> => {
+      const [matches, predictions] = await Promise.all([
+        fetchMatches(),
+        isAuthenticated ? fetchMyPredictions().catch(() => []) : Promise.resolve([]),
+      ]);
+
+      if (!isAuthenticated || predictions.length === 0) return matches;
+
+      const predMap = new Map(
+        predictions.map((p) => [
+          p.matchId,
+          { homeScorePredicted: p.homeScorePredicted, awayScorePredicted: p.awayScorePredicted, pointsEarned: p.pointsEarned },
+        ])
+      );
+
+      return matches.map((m) => ({
+        ...m,
+        userPrediction: predMap.get(m.id) ?? m.userPrediction ?? null,
+      }));
+    };
+
+    loadMatches()
       .then(setMatches)
       .catch(() => setError('No se pudieron cargar los partidos. Por favor intentá de nuevo.'))
       .finally(() => setLoading(false));
 
     const interval = setInterval(() => {
-      fetchMatches().then(setMatches).catch(() => {});
+      loadMatches().then(setMatches).catch(() => {});
     }, 60_000);
 
     return () => clearInterval(interval);

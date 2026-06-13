@@ -7,16 +7,24 @@ import type { BonusAnswer } from '../types';
 // Deadline: June 17, 2026 at 23:59 local time
 const DEADLINE = new Date('2026-06-17T23:59:00');
 
-// WC2026 qualified teams (can be updated as needed)
+// WC2026 qualified teams — 48 participants
 const WC_TEAMS = [
-  'Argentina', 'Brasil', 'Francia', 'Inglaterra', 'España', 'Alemania',
-  'Portugal', 'Países Bajos', 'Bélgica', 'Uruguay', 'Colombia', 'Mexico',
-  'Estados Unidos', 'Canadá', 'Marruecos', 'Senegal', 'Nigeria', 'Ghana',
-  'Japón', 'Corea del Sur', 'Australia', 'Arabia Saudita', 'Irán', 'Qatar',
-  'Polonia', 'Croacia', 'Serbia', 'Dinamarca', 'Suiza', 'Austria',
-  'Ecuador', 'Perú', 'Chile', 'Venezuela', 'Bolivia', 'Paraguay',
-  'Costa Rica', 'Honduras', 'Panamá', 'Jamaica', 'Argelia', 'Egipto',
-  'Camerún', 'Costa de Marfil', 'Túnez', 'Sudáfrica', 'China', 'Indonesia',
+  // CONMEBOL (6)
+  'Argentina', 'Brasil', 'Colombia', 'Ecuador', 'Paraguay', 'Uruguay',
+  // UEFA (16)
+  'Alemania', 'Austria', 'Bélgica', 'Bosnia y Herzegovina', 'Croacia',
+  'España', 'Escocia', 'Francia', 'Inglaterra', 'Noruega', 'Países Bajos',
+  'Portugal', 'República Checa', 'Suecia', 'Suiza', 'Turquía',
+  // CONCACAF (6)
+  'Canadá', 'Curazao', 'Estados Unidos', 'Haití', 'México', 'Panamá',
+  // CAF (10)
+  'Argelia', 'Cabo Verde', 'Costa de Marfil', 'Egipto', 'Ghana',
+  'Marruecos', 'República Democrática del Congo', 'Senegal', 'Sudáfrica', 'Túnez',
+  // AFC (9)
+  'Arabia Saudita', 'Australia', 'Catar', 'Corea del Sur', 'Irak',
+  'Irán', 'Japón', 'Jordania', 'Uzbekistán',
+  // OFC (1)
+  'Nueva Zelanda',
 ].sort();
 
 export default function GoldenBallPage() {

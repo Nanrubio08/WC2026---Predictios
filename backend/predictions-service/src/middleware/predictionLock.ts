@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from './authenticateJwt';
 import { getMatch } from '../clients/matchesClient';
 
-const LOCK_MINUTES = 30;
+const LOCK_MINUTES = 10;
 
 export async function predictionLock(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   const rawMatchId = (req.body as { matchId?: unknown }).matchId;
@@ -30,7 +30,7 @@ export async function predictionLock(req: AuthenticatedRequest, res: Response, n
   const lockDeadline = kickoff - LOCK_MINUTES * 60 * 1000;
 
   if (Date.now() >= lockDeadline) {
-    res.status(403).json({ error: 'Prediction window is closed (30-minute lock enforced)' });
+    res.status(403).json({ error: 'Prediction window is closed (10-minute lock enforced)' });
     return;
   }
 
