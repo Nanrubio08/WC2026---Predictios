@@ -86,8 +86,8 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style={{ background: 'rgba(4,7,14,0.85)' }} onClick={onClose}>
-      <div className="relative mx-4 w-full max-w-md overflow-hidden rounded-2xl" onClick={(e) => e.stopPropagation()}
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto py-4 backdrop-blur-sm" style={{ background: 'rgba(4,7,14,0.85)' }} onClick={onClose}>
+      <div className="relative mx-4 w-full max-w-md overflow-visible rounded-2xl" onClick={(e) => e.stopPropagation()}
         style={{ background: '#080F1C', border: '1px solid rgba(245,166,35,0.2)', boxShadow: '0 0 60px rgba(245,166,35,0.08), 0 24px 64px rgba(0,0,0,0.6)' }}>
         {/* Top gold line */}
         <div className="h-0.5 w-full" style={{ background: 'linear-gradient(90deg, transparent, #F5A623 30%, #FFD166 50%, #F5A623 70%, transparent)' }} />
