@@ -181,7 +181,7 @@ export default function Navbar({ isAuthenticated, user, onLogin, onLogout }: Pro
               {mobileNavLink('/matches', 'Partidos')}
               {mobileNavLink('/groups', 'Grupos')}
               {mobileNavLink('/leaderboard', 'Posiciones')}
-              {isAuthenticated && mobileNavLink('/bonus', '🏆 Bonus')}
+              {isAuthenticated && mobileNavLink('/bonus', 'Gol de oro 🪙')}
               {isAuthenticated && mobileNavLink('/my-predictions', 'Mis Pronósticos')}
               {user?.role === 'admin' && mobileNavLink('/admin', '⚙ Admin')}
 
