@@ -8,6 +8,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import GroupStandingsPage from './pages/GroupStandingsPage';
 import MyPredictionsPage from './pages/MyPredictionsPage';
+import UserPredictionsPage from './pages/UserPredictionsPage';
 import AdminPage from './pages/AdminPage';
 import GoldenBallPage from './pages/GoldenBallPage';
 import AboutPage from './pages/AboutPage';
@@ -31,7 +32,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/matches" element={<MatchListPage isAuthenticated={isAuthenticated} />} />
-            <Route path="/leaderboard" element={<LeaderboardPage currentUser={user} />} />
+            <Route path="/leaderboard" element={<LeaderboardPage currentUser={user} isAuthenticated={isAuthenticated} />} />
+            <Route path="/player/:userId" element={<UserPredictionsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/groups" element={<GroupStandingsPage />} />
             <Route path="/my-predictions" element={<MyPredictionsPage />} />

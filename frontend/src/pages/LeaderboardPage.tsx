@@ -5,9 +5,10 @@ import type { LeaderboardEntry, User } from '../types';
 
 interface Props {
   currentUser: User | null;
+  isAuthenticated?: boolean;
 }
 
-export default function LeaderboardPage({ currentUser }: Props) {
+export default function LeaderboardPage({ currentUser, isAuthenticated }: Props) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +56,7 @@ export default function LeaderboardPage({ currentUser }: Props) {
         </div>
       )}
 
-      {!loading && !error && <LeaderboardTable entries={entries} currentUserId={currentUser?.id} />}
+      {!loading && !error && <LeaderboardTable entries={entries} currentUserId={currentUser?.id} isAuthenticated={isAuthenticated} />}
     </div>
   );
 }

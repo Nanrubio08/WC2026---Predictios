@@ -106,6 +106,13 @@ export async function fetchMyPredictions(): Promise<MyPrediction[]> {
   return res.data;
 }
 
+// Any user's finished-match predictions (visible to all authenticated users)
+export async function fetchUserPredictions(userId: string): Promise<MyPrediction[]> {
+  const res = await api.get<MyPrediction[]>(`/api/predictions/user/${userId}`);
+  return res.data;
+}
+
+
 // Bonus / Golden Ball
 export async function fetchMyBonusAnswer(): Promise<BonusAnswer> {
   const res = await api.get<BonusAnswer>('/api/bonus/answer');

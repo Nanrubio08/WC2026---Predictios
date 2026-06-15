@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { fetchMyPredictions } from '../services/api';
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
+import { fetchUserPredictions } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { MyPrediction } from '../types';
 
@@ -30,16 +30,10 @@ function StatusBadge({ status }: { status: string }) {
       EN VIVO
     </span>
   );
-  if (status === 'finished') return (
+  return (
     <span className="rounded-full px-2.5 py-1 text-xs font-bold uppercase"
       style={{ background: 'rgba(91,110,140,0.15)', border: '1px solid rgba(91,110,140,0.2)', color: '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.12em' }}>
       FINAL
-    </span>
-  );
-  return (
-    <span className="rounded-full px-2.5 py-1 text-xs font-bold uppercase"
-      style={{ background: 'rgba(0,200,122,0.08)', border: '1px solid rgba(0,200,122,0.2)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.12em' }}>
-      PRÓXIMO
     </span>
   );
 }
@@ -57,13 +51,12 @@ function PointsBadge({ points }: { points: number }) {
       ✓ {points} pts
     </span>
   );
-  if (points === 0) return (
+  return (
     <span className="rounded-full px-2.5 py-1 text-xs font-bold"
       style={{ background: 'rgba(91,110,140,0.1)', border: '1px solid rgba(91,110,140,0.2)', color: '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
       {points} pts
     </span>
   );
-  return null;
 }
 
 function TeamLogo({ src, alt }: { src: string | null; alt: string }) {
@@ -78,9 +71,14 @@ function TeamLogo({ src, alt }: { src: string | null; alt: string }) {
   return <img src={src} alt={alt} className="h-8 w-8 object-contain shrink-0" onError={() => setFailed(true)} />;
 }
 
-export default function MyPredictionsPage() {
+export default function UserPredictionsPage() {
   const { isAuthenticated } = useAuthToken();
   const navigate = useNavigate();
+  const { userId } = useParams<{ userId: string }>();
+  const [searchParams] = useSearchParams();
+  const displayName = searchParams.get('name') ?? searchParams.get('username') ?? userId ?? '';
+  const username = searchParams.get('username') ?? '';
+
   const [predictions, setPredictions] = useState<MyPrediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,11 +88,12 @@ export default function MyPredictionsPage() {
 
   useEffect(() => {
     if (!isAuthenticated) { navigate('/'); return; }
-    fetchMyPredictions()
+    if (!userId) { navigate('/leaderboard'); return; }
+    fetchUserPredictions(userId)
       .then(setPredictions)
-      .catch(() => setError('No se pudieron cargar tus pronósticos.'))
+      .catch(() => setError('No se pudieron cargar los pronósticos.'))
       .finally(() => setLoading(false));
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, userId]);
 
   // Sort: live first, then newest-first by kickoffTime
   const sorted = useMemo(() =>
@@ -109,21 +108,18 @@ export default function MyPredictionsPage() {
     [predictions]
   );
 
-  // Available stages that have at least one prediction
   const availableStages = useMemo(() => {
     const stages = new Set(sorted.map((p) => p.match?.stage).filter(Boolean) as string[]);
     const order: StageFilter[] = ['GROUP_STAGE', 'ROUND_OF_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'FINAL'];
     return order.filter((s) => stages.has(s));
   }, [sorted]);
 
-  // Days available for the current stage filter
   const availableDays = useMemo(() => {
     const base = stageFilter === 'all' ? sorted : sorted.filter((p) => p.match?.stage === stageFilter);
     const days = new Set(base.filter((p) => p.match).map((p) => getMatchDay(p.match!.kickoffTime)));
     return Array.from(days).sort((a, b) => a - b);
   }, [sorted, stageFilter]);
 
-  // Teams available from all predictions
   const availableTeams = useMemo(() => {
     const teams = new Set(sorted.flatMap((p) => p.match ? [p.match.homeTeam, p.match.awayTeam] : []));
     return Array.from(teams).sort();
@@ -139,11 +135,10 @@ export default function MyPredictionsPage() {
     });
   }, [sorted, stageFilter, selectedDay, selectedTeam]);
 
-  const finished = predictions.filter((p) => p.match?.status === 'finished');
-  const totalPoints = finished.reduce((s, p) => s + p.pointsEarned, 0);
-  const exactHits = finished.filter((p) => p.pointsEarned === 5).length;
-  const correctOutcome = finished.filter((p) => p.pointsEarned === 3).length;
-  const accuracy = finished.length > 0 ? Math.round(((exactHits + correctOutcome) / finished.length) * 100) : 0;
+  const totalPoints = predictions.reduce((s, p) => s + p.pointsEarned, 0);
+  const exactHits = predictions.filter((p) => p.pointsEarned === 5).length;
+  const correctOutcome = predictions.filter((p) => p.pointsEarned === 3).length;
+  const accuracy = predictions.length > 0 ? Math.round(((exactHits + correctOutcome) / predictions.length) * 100) : 0;
 
   const pillBase = 'shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition-all';
   const activePill = {
@@ -166,18 +161,25 @@ export default function MyPredictionsPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 py-10 text-center">
-        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-wc-muted"
+        <Link to="/leaderboard" className="inline-flex items-center gap-1.5 mb-4 text-xs font-bold text-wc-muted hover:text-wc-text transition-colors"
+          style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          ← Tabla de posiciones
+        </Link>
+        <p className="mb-1 text-xs font-bold uppercase tracking-widest text-wc-muted"
           style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.2em' }}>
-          Mi historial
+          Pronósticos de
         </p>
-        <h1 className="mb-2 leading-none"
-          style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 8vw, 4rem)', color: '#E8EDF5', textTransform: 'uppercase' }}>
-          MIS <span className="text-gold-shimmer">PRONÓSTICOS</span>
+        <h1 className="mb-1 leading-none"
+          style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 7vw, 3.5rem)', color: '#E8EDF5', textTransform: 'uppercase' }}>
+          <span className="text-gold-shimmer">{displayName}</span>
         </h1>
+        {username && displayName !== username && (
+          <p className="text-xs text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>@{username}</p>
+        )}
       </div>
 
       {/* Stats bar */}
-      {!loading && !error && finished.length > 0 && (
+      {!loading && !error && predictions.length > 0 && (
         <div className="mb-6 grid grid-cols-4 gap-3">
           {[
             { label: 'PUNTOS', value: totalPoints, color: '#F5A623' },
@@ -196,7 +198,6 @@ export default function MyPredictionsPage() {
       {/* Filters */}
       {!loading && !error && predictions.length > 0 && (
         <div className="mb-5 space-y-3">
-          {/* Stage filter */}
           {availableStages.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
               <button onClick={() => { setStageFilter('all'); setSelectedDay(null); }} className={pillBase}
@@ -212,46 +213,32 @@ export default function MyPredictionsPage() {
             </div>
           )}
 
-          {/* Day filter */}
           {availableDays.length > 0 && (
             <div className="flex items-center gap-3">
               <label htmlFor="day-filter" className="shrink-0 text-sm font-bold text-wc-muted"
                 style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 Día:
               </label>
-              <select
-                id="day-filter"
-                value={selectedDay ?? ''}
-                onChange={(e) => setSelectedDay(e.target.value === '' ? null : Number(e.target.value))}
+              <select id="day-filter" value={selectedDay ?? ''} onChange={(e) => setSelectedDay(e.target.value === '' ? null : Number(e.target.value))}
                 className="rounded-lg px-3 py-1.5 text-sm font-semibold text-wc-text focus:outline-none"
-                style={{ background: '#0D1829', border: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}
-              >
+                style={{ background: '#0D1829', border: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
                 <option value="">Todos los días</option>
-                {availableDays.map((day) => (
-                  <option key={day} value={day}>Día {day}</option>
-                ))}
+                {availableDays.map((day) => <option key={day} value={day}>Día {day}</option>)}
               </select>
             </div>
           )}
 
-          {/* Team filter */}
           {availableTeams.length > 0 && (
             <div className="flex items-center gap-3">
               <label htmlFor="team-filter" className="shrink-0 text-sm font-bold text-wc-muted"
                 style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 Equipo:
               </label>
-              <select
-                id="team-filter"
-                value={selectedTeam ?? ''}
-                onChange={(e) => setSelectedTeam(e.target.value === '' ? null : e.target.value)}
+              <select id="team-filter" value={selectedTeam ?? ''} onChange={(e) => setSelectedTeam(e.target.value === '' ? null : e.target.value)}
                 className="rounded-lg px-3 py-1.5 text-sm font-semibold text-wc-text focus:outline-none"
-                style={{ background: '#0D1829', border: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em', minWidth: '160px' }}
-              >
+                style={{ background: '#0D1829', border: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em', minWidth: '160px' }}>
                 <option value="">Todos los equipos</option>
-                {availableTeams.map((team) => (
-                  <option key={team} value={team}>{team}</option>
-                ))}
+                {availableTeams.map((team) => <option key={team} value={team}>{team}</option>)}
               </select>
             </div>
           )}
@@ -275,7 +262,7 @@ export default function MyPredictionsPage() {
 
       {!loading && !error && predictions.length === 0 && (
         <div className="py-16 text-center text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1.1rem' }}>
-          Aún no enviaste ningún pronóstico. ¡Empieza a predecir en la sección de Partidos!
+          Este usuario aún no tiene pronósticos en partidos finalizados.
         </div>
       )}
 
@@ -290,17 +277,14 @@ export default function MyPredictionsPage() {
         <div className="space-y-3">
           {filtered.map((p) => {
             const m = p.match;
-            const isFinished = m?.status === 'finished';
             const kickoff = m ? new Date(m.kickoffTime) : null;
             return (
               <div key={p.matchId} className="card p-4" style={m?.status === 'live' ? { borderColor: 'rgba(240,62,62,0.4)' } : {}}>
-                {/* Live accent line */}
                 {m?.status === 'live' && (
                   <div className="h-0.5 w-full mb-3 rounded-full" style={{ background: 'linear-gradient(90deg, #F03E3E 0%, rgba(240,62,62,0) 100%)' }} />
                 )}
-                {/* Date + status + group row */}
                 <div className="mb-3 flex items-center gap-2 flex-wrap">
-                  <StatusBadge status={m?.status ?? 'scheduled'} />
+                  <StatusBadge status={m?.status ?? 'finished'} />
                   {kickoff && (
                     <span className="text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif' }}>
                       {kickoff.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -311,22 +295,12 @@ export default function MyPredictionsPage() {
                       · {m.group.replace('GROUP_', 'Gr. ')}
                     </span>
                   )}
-                  {/* Points badge pushed to right */}
                   <div className="ml-auto shrink-0">
-                    {isFinished ? (
-                      <PointsBadge points={p.pointsEarned} />
-                    ) : (
-                      <span className="rounded-full px-2.5 py-1 text-xs font-bold"
-                        style={{ background: 'rgba(0,200,122,0.08)', border: '1px solid rgba(0,200,122,0.2)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif' }}>
-                        Pendiente
-                      </span>
-                    )}
+                    <PointsBadge points={p.pointsEarned} />
                   </div>
                 </div>
 
-                {/* Teams + score row: [Home] [Score/Prediction] [Away] */}
                 <div className="flex items-center gap-2">
-                  {/* Home team */}
                   <div className="flex flex-1 flex-col items-center gap-1 min-w-0">
                     <TeamLogo src={m?.homeLogoUrl ?? null} alt={m?.homeTeam ?? '?'} />
                     <span className="text-center text-xs font-bold text-wc-text uppercase leading-tight w-full"
@@ -335,7 +309,6 @@ export default function MyPredictionsPage() {
                     </span>
                   </div>
 
-                  {/* Score / Prediction (centre) */}
                   <div className="shrink-0 text-center space-y-1.5 px-2">
                     <div className="flex items-baseline justify-center gap-2">
                       <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.65rem', fontWeight: 700, color: '#F5A623', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>PRON.</span>
@@ -343,7 +316,7 @@ export default function MyPredictionsPage() {
                         {p.homeScorePredicted} – {p.awayScorePredicted}
                       </span>
                     </div>
-                    {isFinished && m?.homeScoreActual !== null && (
+                    {m && m.homeScoreActual !== null && (
                       <div className="flex items-baseline justify-center gap-2">
                         <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.65rem', fontWeight: 700, color: '#5B6E8C', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>REAL</span>
                         <span className="tabular-nums" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1rem', color: '#5B6E8C', letterSpacing: '0.03em' }}>
@@ -353,7 +326,6 @@ export default function MyPredictionsPage() {
                     )}
                   </div>
 
-                  {/* Away team */}
                   <div className="flex flex-1 flex-col items-center gap-1 min-w-0">
                     <TeamLogo src={m?.awayLogoUrl ?? null} alt={m?.awayTeam ?? '?'} />
                     <span className="text-center text-xs font-bold text-wc-text uppercase leading-tight w-full"
