@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const BASE_URL = 'https://api.football-data.org/v4';
 const API_KEY = process.env.FOOTBALL_DATA_API_KEY ?? '';
@@ -44,18 +44,40 @@ export interface FDMatch {
   };
 }
 
+async function withRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const isRateLimit = (err as AxiosError)?.response?.status === 429;
+      const isServerError = (err as AxiosError)?.response?.status !== undefined &&
+        (err as AxiosError).response!.status! >= 500;
+      if (!isRateLimit && !isServerError) throw err;
+      if (attempt === retries) throw err;
+      const delay = Math.min(1000 * 2 ** attempt, 30000);
+      console.warn(`[footballData] API ${isRateLimit ? 'rate-limited' : 'error'}, retry ${attempt}/${retries} in ${delay}ms`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw new Error('unreachable');
+}
+
 export async function fetchFixtures(competition: string, season: number): Promise<FDMatch[]> {
-  const res = await client.get<{ matches: FDMatch[] }>(
-    `/competitions/${competition}/matches`,
-    { params: { season } },
+  const res = await withRetry(() =>
+    client.get<{ matches: FDMatch[] }>(
+      `/competitions/${competition}/matches`,
+      { params: { season } },
+    )
   );
   return res.data.matches;
 }
 
 export async function fetchLiveFixtures(competition: string): Promise<FDMatch[]> {
-  const res = await client.get<{ matches: FDMatch[] }>(
-    `/competitions/${competition}/matches`,
-    { params: { status: 'IN_PLAY,PAUSED' } },
+  const res = await withRetry(() =>
+    client.get<{ matches: FDMatch[] }>(
+      `/competitions/${competition}/matches`,
+      { params: { status: 'IN_PLAY,PAUSED' } },
+    )
   );
   return res.data.matches;
 }
