@@ -3,7 +3,6 @@ import { validateEnv } from './config/env';
 validateEnv();
 import express from 'express';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import { corsOptions } from './config/cors';
 import healthRouter from './routes/health';
@@ -28,35 +27,20 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan('combined', { stream: { write: (msg) => logger.http(msg.trim()) } }));
 
-// Rate limiting for predictions (20 per 15 min per IP)
-const predictionsLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Demasiadas solicitudes. Por favor espera antes de volver a intentar.' },
-});
-
-// Rate limiting for bonus (5 per min per IP)
-const bonusLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Demasiadas solicitudes. Por favor espera.' },
-});
+// Rate limiting is applied per-route inside predictionsRoutes.ts (POST /)
+// and bonusRoutes.ts (POST /answer). GET endpoints are not rate-limited.
 
 app.use('/health', healthRouter);
 app.use('/internal/users', internalUsersRouter);
 app.use('/internal/predictions', internalPredictionsRouter);
 app.use('/internal/scoring', internalScoringRouter);
-app.use('/api/predictions', predictionsLimiter, predictionsRouter);
+app.use('/api/predictions', predictionsRouter);
 app.use('/api/predictions', myPredictionsRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/admin/leaderboard', adminLeaderboardRouter);
 app.use('/api/admin/bonus', adminBonusRouter);
 app.use('/api/admin/predictions', adminPredictionsRouter);
-app.use('/api/bonus', bonusLimiter, bonusRouter);
+app.use('/api/bonus', bonusRouter);
 
 app.use(errorHandler);
 

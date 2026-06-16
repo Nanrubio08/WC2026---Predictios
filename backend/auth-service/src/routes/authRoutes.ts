@@ -15,28 +15,35 @@ import { authenticateJwt } from '../middleware/authenticateJwt';
 
 const router = Router();
 
+function skipIfInternal(req: { headers: Record<string, string | string[] | undefined> }): boolean {
+  return req.headers['x-internal-token'] === process.env.INTERNAL_SERVICE_TOKEN;
+}
+
 const loginLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 5,
+  windowMs: parseInt(process.env.LOGIN_RATE_WINDOW_MS ?? String(5 * 60 * 1000)),
+  max: parseInt(process.env.LOGIN_RATE_MAX ?? '5'),
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many login attempts, please try again in 5 minutes' },
+  message: { error: 'Too many login attempts, please try again later.' },
+  skip: skipIfInternal,
 });
 
 const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 10,
+  windowMs: parseInt(process.env.REGISTER_RATE_WINDOW_MS ?? String(60 * 60 * 1000)),
+  max: parseInt(process.env.REGISTER_RATE_MAX ?? '10'),
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many registration attempts, please try again later' },
+  message: { error: 'Too many registration attempts, please try again later.' },
+  skip: skipIfInternal,
 });
 
 const forgotLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 3,
+  windowMs: parseInt(process.env.FORGOT_RATE_WINDOW_MS ?? String(15 * 60 * 1000)),
+  max: parseInt(process.env.FORGOT_RATE_MAX ?? '3'),
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' },
+  message: { error: 'Demasiados intentos. Intenta de nuevo más tarde.' },
+  skip: skipIfInternal,
 });
 
 router.post('/register', registerLimiter, (req, res) => {
@@ -112,11 +119,12 @@ router.post('/forgot-password', forgotLimiter, (req, res) => {
 });
 
 const resetLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
+  windowMs: parseInt(process.env.RESET_RATE_WINDOW_MS ?? String(15 * 60 * 1000)),
+  max: parseInt(process.env.RESET_RATE_MAX ?? '10'),
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' },
+  message: { error: 'Demasiados intentos. Intenta de nuevo más tarde.' },
+  skip: skipIfInternal,
 });
 
 router.post('/reset-password', resetLimiter, (req, res) => {

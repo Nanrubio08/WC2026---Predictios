@@ -368,7 +368,7 @@ export default function HomePage() {
               <span className="rounded-full px-4 py-1.5 font-black tabular-nums"
                 style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.5rem', color: '#CD7F32', background: 'rgba(205,127,50,0.08)', border: '1px solid rgba(205,127,50,0.2)', letterSpacing: '0.03em' }}>
                 $100,000
-              </span>
+              </span> 
             </div>
           </div>
         </div>
