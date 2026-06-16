@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import NextMatchBanner from '../components/NextMatchBanner';
+import GoldenGoalPopup from '../components/GoldenGoalPopup';
 
 const STADIUM_IMG   = '/images/equipos.jpg';
 const STADIUM_NIGHT = '/images/copa_4.jpg';
@@ -70,7 +71,7 @@ const faqs = [
   { q: '¿Puedo modificar mi predicción?', a: 'Sí, todas las veces que quieras hasta que se cierre la ventana de predicción.' },
   { q: '¿Cuándo se asignan los puntos?', a: 'Automáticamente una vez que el partido finaliza y se confirma el marcador final.' },
   { q: '¿Qué cuenta como resultado correcto?', a: 'Victoria local, victoria visitante o empate — según el resultado a los 90 minutos. No se tienen en cuenta el alargue ni los penaltis.' },
-  { q: '¿Qué es el Gol de Oro?', a: 'Una predicción especial: eliges que selección ganará el Mundial 2026. Si aciertas, sumas 30 puntos bonus de golpe. Puedes cambiar tu elección hasta el 17 de junio a las 23:59. Después de esa fecha queda bloqueada.' },
+  { q: '¿Qué es el Gol de Oro?', a: 'Una predicción especial: eliges que selección ganará el Mundial 2026. Si aciertas, sumas 30 puntos bonus de golpe. Puedes cambiar tu elección hasta el 21 de junio a las 23:59. Después de esa fecha queda bloqueada.' },
 ];
 
 const stats = [
@@ -93,6 +94,7 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-0">
+      <GoldenGoalPopup />
 
       {/* ── Hero ── */}
       <section className="relative -mx-4 overflow-hidden sm:-mx-0 sm:mt-4 sm:rounded-3xl" style={{ minHeight: '88vh' }}>
@@ -278,7 +280,7 @@ export default function HomePage() {
                 {goldenBallRow.result}
               </span>
               <div className="mt-1 text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
-                Cierra el 17 Jun · 23:59
+                Cierra el 21 Jun · 23:59
               </div>
               <div className="mt-1.5 h-1 w-28 rounded-full" style={{ background: '#152136' }}>
                 <div className="h-1 rounded-full" style={{ width: goldenBallRow.width, background: goldenBallRow.color, boxShadow: `0 0 10px ${goldenBallRow.glow}` }} />
@@ -304,22 +306,7 @@ export default function HomePage() {
           </h2>
         </div>
 
-        {/* Reveal notice banner */}
-        <div className="rounded-2xl px-6 py-5 space-y-3"
-          style={{ background: 'rgba(245,166,35,0.06)', border: '1px solid rgba(245,166,35,0.2)' }}>
-          <div className="flex items-center justify-center gap-3">
-            <span className="text-xl">📅</span>
-            <p style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1rem', color: '#F5A623', letterSpacing: '0.04em', fontWeight: 700 }}>
-              Los montos serán revelados el día que inicie el torneo · <span className="text-wc-muted font-normal">11 de Junio 2026</span>
-            </p>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-base">👥</span>
-            <p className="text-sm text-wc-muted text-center" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.95rem', letterSpacing: '0.04em' }}>
-              Los premios dependen del número de participantes inscritos al inicio del torneo — <span style={{ color: '#F5A623' }}>¡entre más jugadores, mayores serán los premios!</span>
-            </p>
-          </div>
-        </div>
+        {/* Reveal notice banner — removed, prizes now known */}
 
         <div className="grid gap-5 sm:grid-cols-3">
           {/* 2nd place */}
@@ -336,14 +323,11 @@ export default function HomePage() {
             <div className="flex flex-col items-center gap-1">
               <span className="text-xs font-bold uppercase tracking-widest text-wc-dim"
                 style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.18em' }}>Premio</span>
-              <span className="flex items-center gap-2 rounded-full px-4 py-1.5 text-lg font-black"
-                style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.5rem', color: '#C0C0C0', background: 'rgba(192,192,192,0.08)', border: '1px solid rgba(192,192,192,0.2)' }}>
-                🔒 Por revelar
+              <span className="rounded-full px-4 py-1.5 font-black tabular-nums"
+                style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.5rem', color: '#C0C0C0', background: 'rgba(192,192,192,0.08)', border: '1px solid rgba(192,192,192,0.2)', letterSpacing: '0.03em' }}>
+                $200,000
               </span>
             </div>
-            <p className="text-center text-xs text-wc-dim px-4" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
-              Premio revelado el inicio del torneo
-            </p>
           </div>
 
           {/* 1st place — center / highlighted */}
@@ -353,7 +337,6 @@ export default function HomePage() {
               style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '5rem', color: 'rgba(255,215,0,0.07)', fontWeight: 900 }}>
               1
             </div>
-            {/* Top badge */}
             <div className="text-5xl mt-2">🥇</div>
             <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, fontSize: '1.6rem', color: '#FFD700', textTransform: 'uppercase', letterSpacing: '0.05em', textShadow: '0 0 16px rgba(255,215,0,0.4)' }}>
               1.er Lugar
@@ -361,14 +344,11 @@ export default function HomePage() {
             <div className="flex flex-col items-center gap-1">
               <span className="text-xs font-bold uppercase tracking-widest text-wc-dim"
                 style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.18em' }}>Gran Premio</span>
-              <span className="flex items-center gap-2 rounded-full px-5 py-2 text-lg font-black"
-                style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.6rem', color: '#FFD700', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.35)', textShadow: '0 0 12px rgba(255,215,0,0.5)' }}>
-                🔒 Por revelar
+              <span className="rounded-full px-5 py-2 font-black tabular-nums"
+                style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.7rem', color: '#FFD700', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.35)', textShadow: '0 0 12px rgba(255,215,0,0.5)', letterSpacing: '0.03em' }}>
+                $500,000
               </span>
             </div>
-            <p className="text-center text-xs text-wc-dim px-4" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
-              Premio revelado el inicio del torneo
-            </p>
           </div>
 
           {/* 3rd place */}
@@ -385,14 +365,11 @@ export default function HomePage() {
             <div className="flex flex-col items-center gap-1">
               <span className="text-xs font-bold uppercase tracking-widest text-wc-dim"
                 style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.18em' }}>Premio</span>
-              <span className="flex items-center gap-2 rounded-full px-4 py-1.5 text-lg font-black"
-                style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.5rem', color: '#CD7F32', background: 'rgba(205,127,50,0.08)', border: '1px solid rgba(205,127,50,0.2)' }}>
-                🔒 Por revelar
+              <span className="rounded-full px-4 py-1.5 font-black tabular-nums"
+                style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: '1.5rem', color: '#CD7F32', background: 'rgba(205,127,50,0.08)', border: '1px solid rgba(205,127,50,0.2)', letterSpacing: '0.03em' }}>
+                $100,000
               </span>
             </div>
-            <p className="text-center text-xs text-wc-dim px-4" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
-              Premio revelado el inicio del torneo
-            </p>
           </div>
         </div>
       </section>

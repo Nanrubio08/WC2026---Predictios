@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchMyPredictions } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { MyPrediction } from '../types';
+import GoldenGoalPopup from '../components/GoldenGoalPopup';
 
 type StageFilter = 'all' | 'GROUP_STAGE' | 'ROUND_OF_16' | 'QUARTER_FINALS' | 'SEMI_FINALS' | 'FINAL';
 
@@ -165,6 +166,7 @@ export default function MyPredictionsPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
+      <GoldenGoalPopup />
       <div className="mb-6 py-10 text-center">
         <p className="mb-2 text-xs font-bold uppercase tracking-widest text-wc-muted"
           style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.2em' }}>
