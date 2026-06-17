@@ -82,12 +82,12 @@ export async function fetchLiveFixtures(competition: string): Promise<FDMatch[]>
   return res.data.matches;
 }
 
-export async function fetchRecentCompletedFixtures(competition: string): Promise<FDMatch[]> {
+export async function fetchTodaysFixtures(competition: string): Promise<FDMatch[]> {
   const today = new Date().toISOString().split('T')[0];
   const res = await withRetry(() =>
     client.get<{ matches: FDMatch[] }>(
       `/competitions/${competition}/matches`,
-      { params: { status: 'FINISHED', dateFrom: today } },
+      { params: { dateFrom: today, dateTo: today } },
     )
   );
   return res.data.matches;

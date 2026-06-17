@@ -1,5 +1,5 @@
 import prisma from '../prisma';
-import { fetchLiveFixtures, fetchRecentCompletedFixtures } from '../utils/apiFootball';
+import { fetchTodaysFixtures } from '../utils/apiFootball';
 import { triggerScoring } from '../clients/scoringClient';
 import logger from '../utils/logger';
 
@@ -62,18 +62,9 @@ export async function pollLiveMatches(): Promise<void> {
     return;
   }
 
-  const [liveMatches, completedMatches] = await Promise.all([
-    fetchLiveFixtures(COMPETITION),
-    fetchRecentCompletedFixtures(COMPETITION),
-  ]);
+  const matches = await fetchTodaysFixtures(COMPETITION);
 
-  const seen = new Set<number>();
-  for (const match of liveMatches) {
-    seen.add(match.id);
-    await processMatch(match);
-  }
-  for (const match of completedMatches) {
-    if (seen.has(match.id)) continue;
+  for (const match of matches) {
     await processMatch(match);
   }
 }
