@@ -12,6 +12,8 @@ import internalAuditRouter from './routes/internalAuditRoutes';
 import adminMatchesRouter from './routes/adminMatchesRoutes';
 import { registerSyncFixturesJob } from './jobs/syncFixtures';
 import { registerPollLiveMatchesJob } from './jobs/pollLiveMatches';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './swagger';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 
@@ -22,6 +24,8 @@ const PORT = process.env.PORT ?? 3002;
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan('combined', { stream: { write: (msg) => logger.http(msg.trim()) } }));
+
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css' }));
 
 app.use('/health', healthRouter);
 app.use('/api/matches', matchesRouter);

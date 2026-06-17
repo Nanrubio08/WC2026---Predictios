@@ -73,10 +73,11 @@ export async function fetchFixtures(competition: string, season: number): Promis
 }
 
 export async function fetchLiveFixtures(competition: string): Promise<FDMatch[]> {
+  const today = new Date().toISOString().split('T')[0];
   const res = await withRetry(() =>
     client.get<{ matches: FDMatch[] }>(
       `/competitions/${competition}/matches`,
-      { params: { status: 'IN_PLAY,PAUSED' } },
+      { params: { status: 'LIVE,PAUSED,FINISHED', dateFrom: today } },
     )
   );
   return res.data.matches;

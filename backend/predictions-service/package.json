@@ -20,6 +20,8 @@
     "express-rate-limit": "^8.5.2",
     "jsonwebtoken": "^9.0.0",
     "morgan": "^1.11.0",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "winston": "^3.19.0",
     "zod": "^4.4.3"
   },
@@ -29,6 +31,8 @@
     "@types/jsonwebtoken": "^9.0.0",
     "@types/morgan": "^1.9.10",
     "@types/node": "^20.0.0",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "eslint": "^8.56.0",
     "prisma": "^5.10.0",
     "ts-node-dev": "^2.0.0",

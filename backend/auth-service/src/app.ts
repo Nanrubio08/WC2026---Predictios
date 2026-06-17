@@ -11,6 +11,8 @@ import authRouter from './routes/authRoutes';
 import internalUsersRouter from './routes/internalUsersRoutes';
 import adminUsersRouter from './routes/adminUsersRoutes';
 import adminInviteCodesRouter from './routes/adminInviteCodesRoutes';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './swagger';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 
@@ -22,6 +24,8 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '12mb' }));
 app.use(cookieParser());
 app.use(morgan('combined', { stream: { write: (msg) => logger.http(msg.trim()) } }));
+
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css' }));
 
 app.use('/health', healthRouter);
 app.use('/api/auth', authRouter);

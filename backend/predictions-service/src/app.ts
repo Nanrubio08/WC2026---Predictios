@@ -16,6 +16,8 @@ import adminBonusRouter from './routes/adminBonusRoutes';
 import adminPredictionsRouter from './routes/adminPredictionsRoutes';
 import { myPredictionsRouter } from './routes/myPredictionsRoutes';
 import bonusRouter from './routes/bonusRoutes';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './swagger';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 
@@ -29,6 +31,8 @@ app.use(morgan('combined', { stream: { write: (msg) => logger.http(msg.trim()) }
 
 // Rate limiting is applied per-route inside predictionsRoutes.ts (POST /)
 // and bonusRoutes.ts (POST /answer). GET endpoints are not rate-limited.
+
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css' }));
 
 app.use('/health', healthRouter);
 app.use('/internal/users', internalUsersRouter);
