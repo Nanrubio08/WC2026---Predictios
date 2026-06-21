@@ -2,6 +2,7 @@ import { Response } from 'express';
 import prisma from '../prisma';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/authenticateJwt';
+import logger from '../utils/logger';
 
 
 const SubmitPredictionSchema = z.object({
@@ -15,6 +16,7 @@ export async function submitPredictionController(req: AuthenticatedRequest, res:
 
   const parsed = SubmitPredictionSchema.safeParse(req.body);
   if (!parsed.success) {
+    logger.warn('submitPrediction validation failed', { userId, errors: parsed.error.issues });
     res.status(400).json({ error: parsed.error.issues[0].message });
     return;
   }
@@ -27,5 +29,6 @@ export async function submitPredictionController(req: AuthenticatedRequest, res:
     create: { userId, matchId, homeScorePredicted, awayScorePredicted },
   });
 
+  logger.info('Prediction saved', { userId, matchId, homeScorePredicted, awayScorePredicted });
   res.status(200).json(prediction);
 }

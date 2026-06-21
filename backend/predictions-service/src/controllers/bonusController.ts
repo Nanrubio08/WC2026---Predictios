@@ -2,6 +2,7 @@ import { Response } from 'express';
 import prisma from '../prisma';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/authenticateJwt';
+import logger from '../utils/logger';
 
 
 export const BONUS_QUESTION = '¿Quién ganará el Mundial 2026?';
@@ -19,6 +20,7 @@ export async function submitBonusAnswerController(req: AuthenticatedRequest, res
   const userId = req.userId!;
   const parsed = AnswerSchema.safeParse(req.body);
   if (!parsed.success) {
+    logger.warn('submitBonusAnswer: validation failed', { userId, errors: parsed.error.issues });
     res.status(400).json({ error: parsed.error.issues[0].message });
     return;
   }
@@ -28,6 +30,7 @@ export async function submitBonusAnswerController(req: AuthenticatedRequest, res
   // Don't allow changing answer if winner already declared
   const winner = await getTournamentWinner();
   if (winner) {
+    logger.warn('submitBonusAnswer: winner already declared, blocking change', { userId, answer });
     res.status(409).json({ error: 'El ganador ya fue declarado. No podés cambiar tu respuesta.' });
     return;
   }
@@ -38,6 +41,7 @@ export async function submitBonusAnswerController(req: AuthenticatedRequest, res
     create: { userId, answer },
   });
 
+  logger.info('Bonus answer saved', { userId, answer });
   res.json({ question: BONUS_QUESTION, answer: bonus.answer, points: bonus.points, tournamentWinner: null });
 }
 

@@ -61,6 +61,7 @@ export default function MatchListPage({ isAuthenticated }: Props) {
   const [stageFilter, setStageFilter] = useState<StageFilter>('all');
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<TeamFilter>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -97,7 +98,7 @@ export default function MatchListPage({ isAuthenticated }: Props) {
     }, 60_000);
 
     return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshKey]);
 
   // Available stages that have at least one match
   const availableStages = useMemo(() => {
@@ -277,7 +278,7 @@ export default function MatchListPage({ isAuthenticated }: Props) {
       {!loading && !error && filtered.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((m) => (
-            <MatchCard key={m.id} match={m} isAuthenticated={isAuthenticated} />
+            <MatchCard key={m.id} match={m} isAuthenticated={isAuthenticated} onPredictionSaved={() => setRefreshKey(k => k + 1)} />
           ))}
         </div>
       )}

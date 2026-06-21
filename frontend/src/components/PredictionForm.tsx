@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { submitPrediction } from '../services/api';
 
+export interface SavedPrediction {
+  homeScorePredicted: number;
+  awayScorePredicted: number;
+  pointsEarned: number;
+}
+
 interface Props {
   matchId: number;
   initialHome?: number;
   initialAway?: number;
-  onSaved?: () => void;
+  onSaved?: (data: SavedPrediction) => void;
 }
 
 export default function PredictionForm({ matchId, initialHome, initialAway, onSaved }: Props) {
@@ -24,9 +30,9 @@ export default function PredictionForm({ matchId, initialHome, initialAway, onSa
     setSaving(true);
     setError(null);
     try {
-      await submitPrediction({ matchId, homeScorePredicted: home, awayScorePredicted: away });
+      const result = await submitPrediction({ matchId, homeScorePredicted: home, awayScorePredicted: away });
       setSaved(true);
-      onSaved?.();
+      onSaved?.({ homeScorePredicted: result.homeScorePredicted ?? home, awayScorePredicted: result.awayScorePredicted ?? away, pointsEarned: result.pointsEarned ?? 0 });
     } catch (err: any) {
       setError(err?.response?.data?.error ?? 'Failed to save');
     } finally {

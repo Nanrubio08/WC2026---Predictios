@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { getAllMatches } from '../clients/matchesClient';
+import logger from '../utils/logger';
 
 export async function getUserPublicPredictionsController(req: Request, res: Response): Promise<void> {
   const { userId } = req.params;
@@ -15,7 +16,7 @@ export async function getUserPublicPredictionsController(req: Request, res: Resp
     const matches = await getAllMatches();
     matchMap = Object.fromEntries(matches.map((m) => [m.id, m]));
   } catch (err) {
-    console.error('[getUserPublicPredictions] Failed to fetch matches', err);
+    logger.error('getUserPublicPredictions: failed to fetch matches', { userId, error: err });
   }
 
   // Only expose predictions for finished matches — those can no longer be modified

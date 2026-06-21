@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { scoreBonusAnswers } from '../services/scoreBonusAnswers';
 import { AdminRequest } from '../middleware/requireAdmin';
 import { writeAuditLog } from '../clients/auditClient';
+import logger from '../utils/logger';
 
 
 const WinnerSchema = z.object({
@@ -13,11 +14,14 @@ const WinnerSchema = z.object({
 export async function declareWinnerController(req: AdminRequest, res: Response): Promise<void> {
   const parsed = WinnerSchema.safeParse(req.body);
   if (!parsed.success) {
+    logger.warn('declareWinner: validation failed', { errors: parsed.error.issues });
     res.status(400).json({ error: parsed.error.issues[0].message });
     return;
   }
 
   const { winner } = parsed.data;
+
+  logger.info('declareWinner: declaring bonus winner', { winner, adminUserId: req.adminUserId });
 
   // Persist winner in config
   await prisma.bonusConfig.upsert({
@@ -36,6 +40,7 @@ export async function declareWinnerController(req: AdminRequest, res: Response):
     detail:      { winner, usersScored: scored },
   });
 
+  logger.info('declareWinner: completed', { winner, usersScored: scored });
   res.json({ winner, scored, message: `Winner declared: ${winner}. ${scored} users earned 30 bonus points.` });
 }
 

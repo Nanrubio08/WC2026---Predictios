@@ -71,7 +71,7 @@ const faqs = [
   { q: '¿Puedo modificar mi predicción?', a: 'Sí, todas las veces que quieras hasta que se cierre la ventana de predicción.' },
   { q: '¿Cuándo se asignan los puntos?', a: 'Automáticamente una vez que el partido finaliza y se confirma el marcador final.' },
   { q: '¿Qué cuenta como resultado correcto?', a: 'Victoria local, victoria visitante o empate — según el resultado a los 90 minutos. No se tienen en cuenta el alargue ni los penaltis.' },
-  { q: '¿Qué es el Gol de Oro?', a: 'Una predicción especial: eliges que selección ganará el Mundial 2026. Si aciertas, sumas 30 puntos bonus de golpe. Puedes cambiar tu elección hasta el 21 de junio a las 23:59. Después de esa fecha queda bloqueada.' },
+  { q: '¿Qué es el Gol de Oro?', a: 'Una predicción especial: eliges que selección ganará el Mundial 2026. Si aciertas, sumas 30 puntos bonus de golpe. Puedes cambiar tu elección hasta el 27 de junio a las 23:59. Después de esa fecha queda bloqueada.' },
 ];
 
 const stats = [
@@ -280,7 +280,7 @@ export default function HomePage() {
                 {goldenBallRow.result}
               </span>
               <div className="mt-1 text-xs text-wc-dim" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.04em' }}>
-                Cierra el 21 Jun · 23:59
+                Cierra el 27 Jun · 23:59
               </div>
               <div className="mt-1.5 h-1 w-28 rounded-full" style={{ background: '#152136' }}>
                 <div className="h-1 rounded-full" style={{ width: goldenBallRow.width, background: goldenBallRow.color, boxShadow: `0 0 10px ${goldenBallRow.glow}` }} />

@@ -4,8 +4,8 @@ import { fetchMyBonusAnswer, submitBonusAnswer } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { BonusAnswer } from '../types';
 
-// Deadline: June 21, 2026 at 23:59 local time
-const DEADLINE = new Date('2026-06-21T23:59:00');
+// Deadline: June 27, 2026 at 23:59 local time
+const DEADLINE = new Date('2026-06-27T23:59:00');
 
 // WC2026 qualified teams — 48 participants
 const WC_TEAMS = [
@@ -128,7 +128,7 @@ export default function GoldenBallPage() {
             <div className="grid grid-cols-3 divide-x" style={{ borderBottom: '1px solid rgba(255,215,0,0.1)', '--tw-divide-opacity': 1 } as React.CSSProperties}>
               {[
                 { icon: '🎯', label: 'Premio', value: '30 pts' },
-                { icon: '📅', label: 'Cierre', value: '21 Jun · 23:59' },
+                { icon: '📅', label: 'Cierre', value: '27 Jun · 23:59' },
                 { icon: pastDeadline ? '🔒' : '⏳', label: pastDeadline ? 'Estado' : 'Tiempo', value: pastDeadline ? 'Cerrado' : daysLeft > 0 ? `${daysLeft}d ${hoursLeft}h` : `${hoursLeft}h` },
               ].map(({ icon, label, value }) => (
                 <div key={label} className="py-3 text-center">

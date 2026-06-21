@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchMyBonusAnswer } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 
-const DEADLINE = new Date('2026-06-21T23:59:00');
+const DEADLINE = new Date('2026-06-27T23:59:00');
 const OPEN_FROM = new Date('2026-06-16T00:00:00');
 
 export default function GoldenGoalPopup() {
@@ -13,7 +13,7 @@ export default function GoldenGoalPopup() {
 
   useEffect(() => {
     const now = Date.now();
-    // Only show between June 16 and June 21
+    // Only show between June 16 and June 27
     if (now < OPEN_FROM.getTime() || now > DEADLINE.getTime()) return;
     if (!isAuthenticated) return;
 
@@ -92,7 +92,7 @@ export default function GoldenGoalPopup() {
             {[
               { icon: '⚽', text: 'Elige la selección que ganará el Mundial 2026' },
               { icon: '✏️', text: 'Puedes cambiar tu elección cuando quieras hasta el cierre' },
-              { icon: '📅', text: 'Cierre: domingo 21 de junio a las 23:59' },
+              { icon: '📅', text: 'Cierre: sábado 27 de junio a las 23:59' },
             ].map(({ icon, text }) => (
               <div key={text} className="flex items-start gap-2.5">
                 <span className="text-base shrink-0">{icon}</span>

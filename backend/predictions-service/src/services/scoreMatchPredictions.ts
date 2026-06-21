@@ -15,6 +15,7 @@ export async function scoreMatchPredictions(
   });
 
   if (!predictions.length) {
+    logger.info('scoreMatchPredictions: no predictions to score', { matchId });
     return { scored: 0 };
   }
 
@@ -28,6 +29,8 @@ export async function scoreMatchPredictions(
     logger.error('scoreMatchPredictions: failed to fetch user roles, skipping leaderboard update as safety measure', { matchId, error: err });
     return { scored: 0 };
   }
+
+  let scoredCount = 0;
 
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     for (const prediction of predictions) {
@@ -46,6 +49,7 @@ export async function scoreMatchPredictions(
 
       // Never update leaderboard for admin users
       if (adminIds.has(prediction.userId)) {
+        logger.debug('scoreMatchPredictions: skipping leaderboard for admin', { userId: prediction.userId, matchId });
         continue;
       }
 
@@ -70,8 +74,10 @@ export async function scoreMatchPredictions(
           },
         });
       }
+      scoredCount++;
     }
   });
 
+  logger.info('scoreMatchPredictions: completed', { matchId, totalPredictions: predictions.length, leaderboardUpdates: scoredCount, homeScoreActual, awayScoreActual });
   return { scored: predictions.length };
 }

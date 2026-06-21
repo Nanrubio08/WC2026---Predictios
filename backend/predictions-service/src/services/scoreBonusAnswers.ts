@@ -1,5 +1,6 @@
 import { Prisma } from '../generated/client';
 import prisma from '../prisma';
+import logger from '../utils/logger';
 
 
 const BONUS_POINTS = 30;
@@ -9,7 +10,12 @@ export async function scoreBonusAnswers(winner: string): Promise<{ scored: numbe
     where: { answer: winner },
   });
 
-  if (!answers.length) return { scored: 0 };
+  if (!answers.length) {
+    logger.info('scoreBonusAnswers: no matching answers found', { winner });
+    return { scored: 0 };
+  }
+
+  logger.info('scoreBonusAnswers: scoring answers', { winner, totalMatching: answers.length });
 
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     for (const answer of answers) {
@@ -39,5 +45,6 @@ export async function scoreBonusAnswers(winner: string): Promise<{ scored: numbe
     }
   });
 
+  logger.info('scoreBonusAnswers: completed', { winner, scored: answers.length });
   return { scored: answers.length };
 }

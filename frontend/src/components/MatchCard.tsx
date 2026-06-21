@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import type { Match } from '../types';
-import PredictionForm from './PredictionForm';
+import PredictionForm, { type SavedPrediction } from './PredictionForm';
 
 interface Props {
   match: Match;
   isAuthenticated?: boolean;
+  onPredictionSaved?: () => void;
 }
 
 function StatusBadge({ status }: { status: Match['status'] }) {
@@ -98,7 +99,14 @@ function CountdownTimer({ kickoffTime }: { kickoffTime: string }) {
   );
 }
 
-export default function MatchCard({ match, isAuthenticated }: Props) {
+export default function MatchCard({ match, isAuthenticated, onPredictionSaved }: Props) {
+  const [savedPrediction, setSavedPrediction] = useState<SavedPrediction | null>(null);
+
+  useEffect(() => {
+    if (match.userPrediction) setSavedPrediction(null);
+  }, [match.userPrediction]);
+
+  const effectivePrediction = savedPrediction ?? match.userPrediction ?? null;
   const kickoff = new Date(match.kickoffTime);
   const dateStr = kickoff.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
   const timeStr = kickoff.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -190,30 +198,30 @@ export default function MatchCard({ match, isAuthenticated }: Props) {
         )}
 
         {/* User's prediction */}
-        {match.userPrediction && (
+        {effectivePrediction && (
           <div className="mt-4 space-y-1.5">
             <div className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs"
               style={{ background: 'rgba(0,200,122,0.07)', border: '1px solid rgba(0,200,122,0.18)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
               <span>🎯</span>
-              <span className="font-bold">TU PRONÓSTICO: {match.userPrediction.homeScorePredicted} – {match.userPrediction.awayScorePredicted}</span>
+              <span className="font-bold">TU PRONÓSTICO: {effectivePrediction.homeScorePredicted} – {effectivePrediction.awayScorePredicted}</span>
             </div>
             {isFinished && (
               <div className="flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs"
                 style={{
-                  background: match.userPrediction.pointsEarned === 5
-                    ? 'rgba(245,166,35,0.1)' : match.userPrediction.pointsEarned === 3
+                  background: effectivePrediction.pointsEarned === 5
+                    ? 'rgba(245,166,35,0.1)' : effectivePrediction.pointsEarned === 3
                     ? 'rgba(0,200,122,0.07)' : 'rgba(91,110,140,0.1)',
-                  border: match.userPrediction.pointsEarned === 5
-                    ? '1px solid rgba(245,166,35,0.3)' : match.userPrediction.pointsEarned === 3
+                  border: effectivePrediction.pointsEarned === 5
+                    ? '1px solid rgba(245,166,35,0.3)' : effectivePrediction.pointsEarned === 3
                     ? '1px solid rgba(0,200,122,0.18)' : '1px solid rgba(91,110,140,0.2)',
-                  color: match.userPrediction.pointsEarned === 5
-                    ? '#F5A623' : match.userPrediction.pointsEarned === 3
+                  color: effectivePrediction.pointsEarned === 5
+                    ? '#F5A623' : effectivePrediction.pointsEarned === 3
                     ? '#00C87A' : '#5B6E8C',
                   fontFamily: 'Barlow Condensed, sans-serif',
                   letterSpacing: '0.05em',
                 }}>
-                <span>{match.userPrediction.pointsEarned === 5 ? '🏆' : match.userPrediction.pointsEarned === 3 ? '✅' : '❌'}</span>
-                <span className="font-black">{match.userPrediction.pointsEarned} PTS</span>
+                <span>{effectivePrediction.pointsEarned === 5 ? '🏆' : effectivePrediction.pointsEarned === 3 ? '✅' : '❌'}</span>
+                <span className="font-black">{effectivePrediction.pointsEarned} PTS</span>
               </div>
             )}
           </div>
@@ -228,8 +236,12 @@ export default function MatchCard({ match, isAuthenticated }: Props) {
             </p>
             <PredictionForm
               matchId={match.id}
-              initialHome={match.userPrediction?.homeScorePredicted}
-              initialAway={match.userPrediction?.awayScorePredicted}
+              initialHome={effectivePrediction?.homeScorePredicted}
+              initialAway={effectivePrediction?.awayScorePredicted}
+              onSaved={(data) => {
+                setSavedPrediction(data);
+                onPredictionSaved?.();
+              }}
             />
           </div>
         )}
