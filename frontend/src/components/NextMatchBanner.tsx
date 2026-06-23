@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchMatches } from '../services/api';
 import type { Match } from '../types';
+import { TBD_TEAM } from '../types';
 
 const SLIDE_HEIGHT = 220; // px — explicit height keeps layout reliable
 
@@ -152,7 +153,7 @@ export default function NextMatchBanner() {
       .then((matches) => {
         const now = Date.now();
         const nxt = matches
-          .filter((m) => m.status === 'scheduled' && new Date(m.kickoffTime).getTime() > now)
+          .filter((m) => m.status === 'scheduled' && new Date(m.kickoffTime).getTime() > now && m.homeTeam !== TBD_TEAM && m.awayTeam !== TBD_TEAM)
           .sort((a, b) => new Date(a.kickoffTime).getTime() - new Date(b.kickoffTime).getTime())[0] ?? null;
         setNextMatch(nxt);
       })

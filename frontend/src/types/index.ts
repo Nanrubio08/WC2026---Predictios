@@ -1,3 +1,5 @@
+export const TBD_TEAM = 'Por definir';
+
 export interface Match {
   id: number;
   homeTeam: string;

@@ -31,6 +31,12 @@ export async function predictionLock(req: AuthenticatedRequest, res: Response, n
     return;
   }
 
+  if (match.homeTeam === 'Por definir' || match.awayTeam === 'Por definir') {
+    logger.warn('predictionLock: teams not yet determined', { userId, matchId });
+    res.status(400).json({ error: 'No se pueden hacer pronósticos hasta que los equipos estén definidos.' });
+    return;
+  }
+
   const kickoff = new Date(match.kickoffTime).getTime();
   const lockDeadline = kickoff - LOCK_MINUTES * 60 * 1000;
 

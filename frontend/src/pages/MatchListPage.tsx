@@ -8,7 +8,7 @@ interface Props {
 }
 
 type StatusFilter = 'all' | 'scheduled' | 'live' | 'finished';
-type StageFilter = 'all' | 'GROUP_STAGE' | 'ROUND_OF_16' | 'QUARTER_FINALS' | 'SEMI_FINALS' | 'FINAL';
+type StageFilter = 'all' | 'GROUP_STAGE' | 'LAST_32' | 'LAST_16' | 'QUARTER_FINALS' | 'SEMI_FINALS' | 'THIRD_PLACE' | 'FINAL';
 type TeamFilter = string | null;
 
 // Day 1 = June 11 2026. Uses local date so matches group by the viewer's timezone day.
@@ -22,9 +22,11 @@ function getMatchDay(kickoffTime: string): number {
 const STAGE_LABELS: Record<StageFilter, string> = {
   all: 'Todos',
   GROUP_STAGE: 'Fase de Grupos',
-  ROUND_OF_16: 'Octavos',
+  LAST_32: 'Ronda de 32',
+  LAST_16: 'Octavos',
   QUARTER_FINALS: 'Cuartos',
   SEMI_FINALS: 'Semis',
+  THIRD_PLACE: 'Tercer Puesto',
   FINAL: 'Final',
 };
 
@@ -103,7 +105,7 @@ export default function MatchListPage({ isAuthenticated }: Props) {
   // Available stages that have at least one match
   const availableStages = useMemo(() => {
     const stages = new Set(matches.map((m) => m.stage).filter(Boolean));
-    const order: StageFilter[] = ['GROUP_STAGE', 'ROUND_OF_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'FINAL'];
+    const order: StageFilter[] = ['GROUP_STAGE', 'LAST_32', 'LAST_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'THIRD_PLACE', 'FINAL'];
     return order.filter((s) => stages.has(s));
   }, [matches]);
 

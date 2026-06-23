@@ -20,11 +20,6 @@ export async function syncFixtures(): Promise<{ upserted: number }> {
   let upserted = 0;
 
   for (const match of matches) {
-    // Skip matches where teams aren't determined yet (knockout stage TBDs)
-    if (!match.homeTeam.name || !match.awayTeam.name) {
-      continue;
-    }
-
     const data = buildMatchData(match);
     const newStatus = data.status;
 
@@ -93,8 +88,8 @@ function buildMatchData(match: FDMatch) {
     (status === 'live' ? match.score.halfTime.away : null);
 
   return {
-    homeTeam: match.homeTeam.name,
-    awayTeam: match.awayTeam.name,
+    homeTeam: match.homeTeam.name ?? 'Por definir',
+    awayTeam: match.awayTeam.name ?? 'Por definir',
     homeLogoUrl: match.homeTeam.crest ?? null,
     awayLogoUrl: match.awayTeam.crest ?? null,
     kickoffTime: new Date(match.utcDate),

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Match } from '../types';
+import { TBD_TEAM } from '../types';
+import { BRACKET_SLOTS } from '../constants/bracketSlots';
 import PredictionForm, { type SavedPrediction } from './PredictionForm';
 
 interface Props {
@@ -112,7 +114,9 @@ export default function MatchCard({ match, isAuthenticated, onPredictionSaved }:
   const timeStr = kickoff.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   const remaining = useCountdown(match.kickoffTime);
   const isLocked = remaining <= 0;
-  const canPredict = match.status === 'scheduled' && isAuthenticated && !isLocked;
+  const isTbd = match.homeTeam === TBD_TEAM || match.awayTeam === TBD_TEAM;
+  const bracketSlot = isTbd ? BRACKET_SLOTS[String(match.id)] : undefined;
+  const canPredict = match.status === 'scheduled' && isAuthenticated && !isLocked && !isTbd;
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
   const hasScore = match.homeScoreActual !== null && match.awayScoreActual !== null;
@@ -141,10 +145,20 @@ export default function MatchCard({ match, isAuthenticated, onPredictionSaved }:
         <div className="flex items-center justify-between gap-3">
           {/* Home team */}
           <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
-            <TeamLogo src={match.homeLogoUrl} alt={match.homeTeam} />
-            <span className="text-center text-xs font-bold leading-tight text-wc-text w-full"
-              style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.8rem', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-              {match.homeTeam}
+            {isTbd ? (
+              <div className="h-10 w-10" />
+            ) : (
+              <TeamLogo src={match.homeLogoUrl} alt={match.homeTeam} />
+            )}
+            <span className="text-center text-xs font-bold leading-tight w-full"
+              style={{
+                fontFamily: 'Barlow Condensed, sans-serif',
+                fontSize: '0.7rem',
+                letterSpacing: '0.03em',
+                textTransform: 'uppercase',
+                color: isTbd ? '#5B6E8C' : '#E8EDF5',
+              }}>
+              {isTbd ? (bracketSlot ? bracketSlot.home : 'POR DEFINIR') : match.homeTeam}
             </span>
           </div>
 
@@ -166,6 +180,11 @@ export default function MatchCard({ match, isAuthenticated, onPredictionSaved }:
                   : <span style={{ fontSize: '1.1rem', color: '#5B6E8C' }}>? – ?</span>
                 }
               </div>
+            ) : isTbd ? (
+              <div className="rounded-xl px-5 py-2"
+                style={{ background: 'rgba(21,33,54,0.3)', border: '1px solid #0D1829' }}>
+                <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 700, fontSize: '1rem', color: '#1F2C3F', letterSpacing: '0.1em' }}>VS</span>
+              </div>
             ) : (
               <div className="rounded-xl px-5 py-2"
                 style={{ background: 'rgba(21,33,54,0.5)', border: '1px solid #152136' }}>
@@ -176,10 +195,20 @@ export default function MatchCard({ match, isAuthenticated, onPredictionSaved }:
 
           {/* Away team */}
           <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
-            <TeamLogo src={match.awayLogoUrl} alt={match.awayTeam} />
-            <span className="text-center text-xs font-bold leading-tight text-wc-text w-full"
-              style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.8rem', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-              {match.awayTeam}
+            {isTbd ? (
+              <div className="h-10 w-10" />
+            ) : (
+              <TeamLogo src={match.awayLogoUrl} alt={match.awayTeam} />
+            )}
+            <span className="text-center text-xs font-bold leading-tight w-full"
+              style={{
+                fontFamily: 'Barlow Condensed, sans-serif',
+                fontSize: '0.7rem',
+                letterSpacing: '0.03em',
+                textTransform: 'uppercase',
+                color: isTbd ? '#5B6E8C' : '#E8EDF5',
+              }}>
+              {isTbd ? (bracketSlot ? bracketSlot.away : 'POR DEFINIR') : match.awayTeam}
             </span>
           </div>
         </div>
@@ -195,6 +224,15 @@ export default function MatchCard({ match, isAuthenticated, onPredictionSaved }:
           ) : (
             <CountdownTimer kickoffTime={match.kickoffTime} />
           )
+        )}
+
+        {/* TBD teams notice */}
+        {isTbd && match.status === 'scheduled' && (
+          <div className="mt-3 flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs"
+            style={{ background: 'rgba(91,110,140,0.06)', border: '1px solid rgba(91,110,140,0.15)', color: '#5B6E8C', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.7rem' }}>⏳</span>
+            <span className="font-bold">EQUIPOS POR DEFINIRSE</span>
+          </div>
         )}
 
         {/* User's prediction */}
@@ -247,7 +285,7 @@ export default function MatchCard({ match, isAuthenticated, onPredictionSaved }:
         )}
 
         {/* Login to predict */}
-        {match.status === 'scheduled' && !isAuthenticated && !isLocked && (
+        {match.status === 'scheduled' && !isAuthenticated && !isLocked && !isTbd && (
           <div className="mt-4 text-center" style={{ borderTop: '1px solid #152136', paddingTop: '0.75rem' }}>
             <button
               className="text-xs font-bold uppercase tracking-wider transition-colors hover:text-wc-gold"
