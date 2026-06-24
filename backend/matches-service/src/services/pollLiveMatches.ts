@@ -1,5 +1,5 @@
 import prisma from '../prisma';
-import { fetchTodaysFixtures } from '../utils/apiFootball';
+import { fetchLiveFixtures, fetchTodaysFixtures } from '../utils/apiFootball';
 import { triggerScoring } from '../clients/scoringClient';
 import logger from '../utils/logger';
 
@@ -7,14 +7,15 @@ import logger from '../utils/logger';
 const COMPETITION = process.env.FOOTBALL_COMPETITION ?? 'WC';
 
 function extractScores(match: { score: { fullTime: { home: number | null; away: number | null }; halfTime: { home: number | null; away: number | null } }; status: string }) {
-  const homeScore = match.score.fullTime.home ?? match.score.halfTime.home;
-  const awayScore = match.score.fullTime.away ?? match.score.halfTime.away;
+  const isLive = ['IN_PLAY', 'PAUSED', 'SUSPENDED'].includes(match.status);
+  const homeScore = match.score.fullTime.home ?? (isLive ? match.score.halfTime.home : null);
+  const awayScore = match.score.fullTime.away ?? (isLive ? match.score.halfTime.away : null);
   return { homeScoreActual: homeScore, awayScoreActual: awayScore };
 }
 
 function liveStatus(value: string): 'scheduled' | 'live' | 'finished' | undefined {
   if (value === 'FINISHED') return 'finished';
-  if (['IN_PLAY', 'PAUSED'].includes(value)) return 'live';
+  if (['IN_PLAY', 'PAUSED', 'SUSPENDED'].includes(value)) return 'live';
   return undefined;
 }
 
@@ -62,9 +63,17 @@ export async function pollLiveMatches(): Promise<void> {
     return;
   }
 
-  const matches = await fetchTodaysFixtures(COMPETITION);
+  const [liveFixtures, todaysFixtures] = await Promise.all([
+    fetchLiveFixtures(COMPETITION),
+    fetchTodaysFixtures(COMPETITION),
+  ]);
 
-  for (const match of matches) {
+  const seen = new Set<number>();
+  const allMatches = [...liveFixtures, ...todaysFixtures];
+
+  for (const match of allMatches) {
+    if (seen.has(match.id)) continue;
+    seen.add(match.id);
     await processMatch(match);
   }
 }
