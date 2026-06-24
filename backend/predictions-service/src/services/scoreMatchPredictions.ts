@@ -41,6 +41,12 @@ export async function scoreMatchPredictions(
         prediction.awayScorePredicted
       );
       const delta = points - prediction.pointsEarned;
+      const wasExact = prediction.pointsEarned === 5;
+      const isExact = points === 5;
+      const wasCorrect = prediction.pointsEarned === 3;
+      const isCorrect = points === 3;
+      const exactDelta = (isExact ? 1 : 0) - (wasExact ? 1 : 0);
+      const correctDelta = (isCorrect ? 1 : 0) - (wasCorrect ? 1 : 0);
 
       await tx.prediction.update({
         where: { id: prediction.id },
@@ -53,7 +59,7 @@ export async function scoreMatchPredictions(
         continue;
       }
 
-      if (delta === 0) {
+      if (delta === 0 && exactDelta === 0 && correctDelta === 0) {
         continue;
       }
 
@@ -64,13 +70,19 @@ export async function scoreMatchPredictions(
       if (leaderboard) {
         await tx.leaderboard.update({
           where: { userId: prediction.userId },
-          data: { totalPoints: { increment: delta } },
+          data: {
+            totalPoints: { increment: delta },
+            exactMatches: { increment: exactDelta },
+            correctOutcomes: { increment: correctDelta },
+          },
         });
       } else {
         await tx.leaderboard.create({
           data: {
             userId: prediction.userId,
             totalPoints: delta > 0 ? delta : 0,
+            exactMatches: isExact ? 1 : 0,
+            correctOutcomes: isCorrect ? 1 : 0,
           },
         });
       }

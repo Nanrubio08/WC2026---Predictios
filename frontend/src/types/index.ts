@@ -22,6 +22,9 @@ export interface LeaderboardEntry {
   username: string;
   name: string | null;
   totalPoints: number;
+  exactMatches: number;
+  correctOutcomes: number;
+  totalPredictions: number;
 }
 
 export interface User {

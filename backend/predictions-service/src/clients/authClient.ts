@@ -8,6 +8,7 @@ export interface UserInfo {
   username: string;
   name: string | null;
   isAdmin: boolean;
+  createdAt: string;
 }
 
 export interface UserInfoFull {

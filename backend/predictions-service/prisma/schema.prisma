@@ -23,9 +23,11 @@ model Prediction {
 }
 
 model Leaderboard {
-  id          String @id @default(uuid())
-  userId      String @unique @map("user_id")
-  totalPoints Int    @default(0) @map("total_points")
+  id              String @id @default(uuid())
+  userId          String @unique @map("user_id")
+  totalPoints     Int    @default(0) @map("total_points")
+  exactMatches    Int    @default(0) @map("exact_matches")
+  correctOutcomes Int    @default(0) @map("correct_outcomes")
 
   @@map("leaderboard")
 }

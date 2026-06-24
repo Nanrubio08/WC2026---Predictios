@@ -72,6 +72,7 @@ const faqs = [
   { q: '¿Cuándo se asignan los puntos?', a: 'Automáticamente una vez que el partido finaliza y se confirma el marcador final.' },
   { q: '¿Qué cuenta como resultado correcto?', a: 'Victoria local, victoria visitante o empate — según el resultado a los 90 minutos. No se tienen en cuenta el alargue ni los penaltis.' },
   { q: '¿Qué es el Gol de Oro?', a: 'Una predicción especial: eliges que selección ganará el Mundial 2026. Si aciertas, sumas 30 puntos bonus de golpe. Puedes cambiar tu elección hasta el 27 de junio a las 23:59. Después de esa fecha queda bloqueada.' },
+  { q: '¿Cómo se desempata en caso de empate de puntos?', a: 'Si dos o más usuarios tienen la misma cantidad de puntos, se desempata por: ① mayor cantidad de marcadores exactos (5 puntos); ② mayor cantidad de resultados correctos (3 puntos); ③ mayor cantidad de pronósticos enviados. Si el empate persiste en el 1.er o 2.º puesto, se define por fecha de registro (el usuario más antiguo obtiene la mejor posición). En el 3.er puesto se comparte la posición.' },
 ];
 
 const stats = [

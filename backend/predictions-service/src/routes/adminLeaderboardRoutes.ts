@@ -26,11 +26,13 @@ router.get('/export', requireAdmin, async (_req, res) => {
       username: usernameMap[e.userId] ?? 'Unknown',
       userId: e.userId,
       totalPoints: e.totalPoints,
+      exactMatches: e.exactMatches,
+      correctOutcomes: e.correctOutcomes,
     }));
 
     const csv = [
-      'Rank,Username,User ID,Total Points',
-      ...rows.map((r) => `${r.rank},"${r.username}","${r.userId}",${r.totalPoints}`),
+      'Rank,Username,User ID,Total Points,Exact Matches,Correct Outcomes',
+      ...rows.map((r) => `${r.rank},"${r.username}","${r.userId}",${r.totalPoints},${r.exactMatches},${r.correctOutcomes}`),
     ].join('\n');
 
     res.setHeader('Content-Type', 'text/csv');

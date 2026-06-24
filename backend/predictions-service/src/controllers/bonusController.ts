@@ -58,3 +58,9 @@ export async function getMyBonusAnswerController(req: AuthenticatedRequest, res:
     tournamentWinner: winner,
   });
 }
+
+export async function getPublicUserBonusAnswerController(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const { userId } = req.params;
+  const bonus = await prisma.bonusAnswer.findUnique({ where: { userId } });
+  res.json({ answer: bonus?.answer ?? null });
+}

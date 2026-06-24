@@ -114,6 +114,11 @@ export async function fetchUserPredictions(userId: string): Promise<MyPrediction
 
 
 // Bonus / Golden Ball
+export async function fetchUserBonusAnswer(userId: string): Promise<{ answer: string | null }> {
+  const res = await api.get(`/api/bonus/answer/${userId}`);
+  return res.data;
+}
+
 export async function fetchMyBonusAnswer(): Promise<BonusAnswer> {
   const res = await api.get<BonusAnswer>('/api/bonus/answer');
   return res.data;

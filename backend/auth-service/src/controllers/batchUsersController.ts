@@ -18,7 +18,7 @@ export async function batchUsersController(req: Request, res: Response): Promise
 
   const users = await prisma.user.findMany({
     where: { id: { in: userIds } },
-    select: { id: true, username: true, name: true, isAdmin: true },
+    select: { id: true, username: true, name: true, isAdmin: true, createdAt: true },
   });
 
   res.json(users);

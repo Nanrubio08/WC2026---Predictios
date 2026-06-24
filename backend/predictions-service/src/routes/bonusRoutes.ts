@@ -2,7 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
 import { authenticateJwt } from '../middleware/authenticateJwt';
-import { submitBonusAnswerController, getMyBonusAnswerController } from '../controllers/bonusController';
+import { submitBonusAnswerController, getMyBonusAnswerController, getPublicUserBonusAnswerController } from '../controllers/bonusController';
 
 const router = Router();
 
@@ -38,6 +38,13 @@ router.get('/answer', authenticateJwt, (req, res) => {
 router.post('/answer', bonusLimiter, authenticateJwt, (req, res) => {
   submitBonusAnswerController(req as any, res).catch((err) => {
     console.error('submitBonusAnswer error', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+});
+
+router.get('/answer/:userId', authenticateJwt, (req, res) => {
+  getPublicUserBonusAnswerController(req as any, res).catch((err) => {
+    console.error('getPublicUserBonusAnswer error', err);
     res.status(500).json({ error: 'Internal server error' });
   });
 });

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import type { LeaderboardEntry, MyPrediction } from '../types';
-import { fetchUserPredictions } from '../services/api';
+import { fetchUserPredictions, fetchUserBonusAnswer } from '../services/api';
 
 interface Props {
   entries: LeaderboardEntry[];
@@ -49,10 +49,15 @@ function TeamLogo({ src, alt }: { src: string | null; alt: string }) {
 }
 
 type PredCache = { data: MyPrediction[]; loading: boolean; error: boolean };
+type BonusCache = { answer: string | null; loading: boolean };
+
+const BONUS_DEADLINE = new Date('2026-06-27T23:59:00');
+const isBonusPastDeadline = Date.now() > BONUS_DEADLINE.getTime();
 
 export default function LeaderboardTable({ entries, currentUserId, isAuthenticated }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [cache, setCache] = useState<Record<string, PredCache>>({});
+  const [bonusCache, setBonusCache] = useState<Record<string, BonusCache>>({});
 
   const toggle = useCallback((userId: string) => {
     if (!isAuthenticated) return;
@@ -64,9 +69,15 @@ export default function LeaderboardTable({ entries, currentUserId, isAuthenticat
           .then((data) => setCache((c) => ({ ...c, [userId]: { data, loading: false, error: false } })))
           .catch(() => setCache((c) => ({ ...c, [userId]: { data: [], loading: false, error: true } })));
       }
+      if (next && isBonusPastDeadline && !bonusCache[userId]) {
+        setBonusCache((c) => ({ ...c, [userId]: { answer: null, loading: true } }));
+        fetchUserBonusAnswer(userId)
+          .then((data) => setBonusCache((c) => ({ ...c, [userId]: { answer: data.answer, loading: false } })))
+          .catch(() => setBonusCache((c) => ({ ...c, [userId]: { answer: null, loading: false } })));
+      }
       return next;
     });
-  }, [isAuthenticated, cache]);
+  }, [isAuthenticated, cache, bonusCache]);
 
   if (!entries.length) {
     return (
@@ -328,6 +339,29 @@ export default function LeaderboardTable({ entries, currentUserId, isAuthenticat
                                 </div>
                               ))}
                             </div>
+
+                            {/* Golden Ball prediction */}
+                            {isBonusPastDeadline && (
+                              <div className="rounded-lg px-4 py-2.5" style={{ background: 'rgba(255,215,0,0.04)', border: '1px solid rgba(255,215,0,0.15)' }}>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span style={{ fontSize: '1rem' }}>🏆</span>
+                                    <span className="text-xs font-bold uppercase tracking-widest"
+                                      style={{ fontFamily: 'Barlow Condensed, sans-serif', color: '#FFD700', letterSpacing: '0.12em' }}>
+                                      GOL DE ORO
+                                    </span>
+                                  </div>
+                                  {bonusCache[e.userId]?.loading ? (
+                                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-yellow-500/30 border-t-yellow-500" />
+                                  ) : (
+                                    <span className="text-sm font-bold"
+                                      style={{ fontFamily: 'Barlow Condensed, sans-serif', color: bonusCache[e.userId]?.answer ? '#FFD700' : '#5B6E8C', letterSpacing: '0.04em' }}>
+                                      {bonusCache[e.userId]?.answer ?? 'Sin pronóstico'}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
 
                             {/* Last 5 predictions */}
                             <div>
