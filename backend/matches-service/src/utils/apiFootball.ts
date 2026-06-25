@@ -22,6 +22,8 @@ export interface FDMatch {
   stage: string;
   group: string | null;
   matchday: number | null;
+  minute: number | null;
+  injuryTime: number | null;
   homeTeam: {
     id: number;
     name: string;

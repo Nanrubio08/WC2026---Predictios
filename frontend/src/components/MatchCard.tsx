@@ -8,15 +8,36 @@ interface Props {
   match: Match;
   isAuthenticated?: boolean;
   onPredictionSaved?: () => void;
+  fetchTimestamp?: number;
 }
 
-function StatusBadge({ status }: { status: Match['status'] }) {
+function LiveMinute({ minute, fetchTimestamp }: { minute: number; fetchTimestamp: number }) {
+  const [now, setNow] = useState(Date.now);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const elapsedMinutes = Math.floor((now - fetchTimestamp) / 60000);
+  const estimated = minute + Math.min(elapsedMinutes, 5);
+
+  return <span>{estimated}&apos;</span>;
+}
+
+function StatusBadge({ status, minute, fetchTimestamp }: { status: Match['status']; minute?: number | null; fetchTimestamp?: number }) {
   if (status === 'live') {
     return (
       <span className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-black uppercase tracking-wider"
         style={{ background: 'rgba(240,62,62,0.12)', border: '1px solid rgba(240,62,62,0.3)', color: '#F03E3E', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.12em' }}>
         <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: '#F03E3E' }} />
         EN VIVO
+        {minute != null && fetchTimestamp != null && (
+          <>
+            <span className="mx-0.5 opacity-50">•</span>
+            <LiveMinute minute={minute} fetchTimestamp={fetchTimestamp} />
+          </>
+        )}
       </span>
     );
   }
@@ -101,7 +122,7 @@ function CountdownTimer({ kickoffTime }: { kickoffTime: string }) {
   );
 }
 
-export default function MatchCard({ match, isAuthenticated, onPredictionSaved }: Props) {
+export default function MatchCard({ match, isAuthenticated, onPredictionSaved, fetchTimestamp }: Props) {
   const [savedPrediction, setSavedPrediction] = useState<SavedPrediction | null>(null);
 
   useEffect(() => {
@@ -134,7 +155,7 @@ export default function MatchCard({ match, isAuthenticated, onPredictionSaved }:
       <div className="p-4">
         {/* Header row */}
         <div className="mb-4 flex items-center justify-between">
-          <StatusBadge status={match.status} />
+          <StatusBadge status={match.status} minute={match.minute} fetchTimestamp={match.status === 'live' ? fetchTimestamp : undefined} />
           <div className="text-right">
             <div className="text-xs font-semibold text-wc-muted" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}>{dateStr}</div>
             <div className="text-xs text-wc-dim">{timeStr}</div>

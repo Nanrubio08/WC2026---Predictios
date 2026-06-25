@@ -19,7 +19,7 @@ function liveStatus(value: string): 'scheduled' | 'live' | 'finished' | undefine
   return undefined;
 }
 
-async function processMatch(match: { id: number; status: string; score: { fullTime: { home: number | null; away: number | null }; halfTime: { home: number | null; away: number | null } } }): Promise<void> {
+async function processMatch(match: { id: number; status: string; minute: number | null; injuryTime: number | null; score: { fullTime: { home: number | null; away: number | null }; halfTime: { home: number | null; away: number | null } } }): Promise<void> {
   try {
     const stored = await prisma.match.findUnique({ where: { id: match.id } });
     if (!stored) return;
@@ -30,13 +30,15 @@ async function processMatch(match: { id: number; status: string; score: { fullTi
     const triggerScoringNow = newStatus === 'finished' && !wasFinished
       && scores.homeScoreActual !== null && scores.awayScoreActual !== null;
 
-    if (newStatus || scores.homeScoreActual !== stored.homeScoreActual || scores.awayScoreActual !== stored.awayScoreActual) {
+    if (newStatus || scores.homeScoreActual !== stored.homeScoreActual || scores.awayScoreActual !== stored.awayScoreActual || match.minute !== stored.minute || match.injuryTime !== stored.injuryTime) {
       await prisma.match.update({
         where: { id: match.id },
         data: {
           ...(newStatus ? { status: newStatus } : {}),
           homeScoreActual: scores.homeScoreActual,
           awayScoreActual: scores.awayScoreActual,
+          minute: match.minute ?? null,
+          injuryTime: match.injuryTime ?? null,
         },
       });
       logger.info('Match updated via poll', { matchId: match.id, status: newStatus, scores });

@@ -120,5 +120,7 @@ function buildMatchData(match: FDMatch) {
     stage: match.stage ?? null,
     group: match.group ?? null,
     matchday: match.matchday ?? null,
+    minute: match.minute ?? null,
+    injuryTime: match.injuryTime ?? null,
   };
 }

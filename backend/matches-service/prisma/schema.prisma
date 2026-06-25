@@ -28,6 +28,8 @@ model Match {
   stage            String?
   group            String?
   matchday         Int?
+  minute           Int?
+  injuryTime       Int?
   updatedAt        DateTime    @updatedAt @map("updated_at")
 
   @@map("matches")
