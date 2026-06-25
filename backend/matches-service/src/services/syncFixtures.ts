@@ -1,5 +1,5 @@
 import prisma from '../prisma';
-import { fetchFixtures, FDMatch } from '../utils/apiFootball';
+import { fetchFixtures, fetchLiveFixtures, FDMatch } from '../utils/apiFootball';
 import { triggerScoring } from '../clients/scoringClient';
 import logger from '../utils/logger';
 
@@ -16,7 +16,24 @@ function mapStatus(status: string): MatchStatusValue {
 }
 
 export async function syncFixtures(): Promise<{ upserted: number }> {
-  const matches = await fetchFixtures(COMPETITION, SEASON);
+  const [seasonMatches, liveMatches] = await Promise.all([
+    fetchFixtures(COMPETITION, SEASON),
+    fetchLiveFixtures(COMPETITION).catch((err) => {
+      logger.warn('Failed to fetch live fixtures during sync, continuing with season data', { error: err });
+      return [] as FDMatch[];
+    }),
+  ]);
+
+  // Merge: live data takes precedence over season data for the same match ID
+  const liveById = new Map(liveMatches.map((m) => [m.id, m]));
+  const matches = seasonMatches.map((m) => liveById.get(m.id) ?? m);
+  // Also append any live matches not present in the season response
+  for (const lm of liveMatches) {
+    if (!matches.some((m) => m.id === lm.id)) {
+      matches.push(lm);
+    }
+  }
+
   let upserted = 0;
 
   for (const match of matches) {
@@ -39,10 +56,14 @@ export async function syncFixtures(): Promise<{ upserted: number }> {
       existing.homeScoreActual !== null &&
       existing.awayScoreActual !== null;
 
+    // Never revert a match that is live or finished back to scheduled via automated sync
+    const safeStatus = isAlreadyFinished ? ('finished' as const) :
+      existing?.status === 'live' && data.status !== 'live' ? ('live' as const) :
+      data.status;
+
     const updateData = {
       ...data,
-      // Never revert a finished match back to live/scheduled via automated sync
-      status: isAlreadyFinished ? ('finished' as const) : data.status,
+      status: safeStatus,
       homeScoreActual: preserveExistingScores
         ? existing.homeScoreActual
         : (data.homeScoreActual ?? existing?.homeScoreActual ?? null),

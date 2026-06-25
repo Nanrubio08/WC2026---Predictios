@@ -12,7 +12,7 @@ const client = axios.create({
   headers: {
     'X-Auth-Token': API_KEY,
   },
-  timeout: 15000,
+  timeout: 30000,
 });
 
 export interface FDMatch {
@@ -49,13 +49,9 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
     try {
       return await fn();
     } catch (err) {
-      const isRateLimit = (err as AxiosError)?.response?.status === 429;
-      const isServerError = (err as AxiosError)?.response?.status !== undefined &&
-        (err as AxiosError).response!.status! >= 500;
-      if (!isRateLimit && !isServerError) throw err;
       if (attempt === retries) throw err;
       const delay = Math.min(1000 * 2 ** attempt, 30000);
-      console.warn(`[footballData] API ${isRateLimit ? 'rate-limited' : 'error'}, retry ${attempt}/${retries} in ${delay}ms`);
+      console.warn(`[footballData] API error (attempt ${attempt}/${retries}), retrying in ${delay}ms:`, (err as Error).message);
       await new Promise((r) => setTimeout(r, delay));
     }
   }

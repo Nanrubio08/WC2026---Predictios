@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchMatches } from '../services/api';
+import { fetchMatches, api } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { Match } from '../types';
 
@@ -143,10 +143,7 @@ export default function GroupStandingsPage() {
   async function handleSync() {
     setSyncing(true);
     try {
-      await fetch('/api/admin/matches/sync', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      await api.post('/api/admin/matches/sync');
       load();
     } catch {
       // ignore

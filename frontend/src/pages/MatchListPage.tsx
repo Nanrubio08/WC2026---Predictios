@@ -19,6 +19,15 @@ function getMatchDay(kickoffTime: string): number {
   return Math.floor((matchLocalMidnight - tournamentLocalMidnight) / 86_400_000) + 1;
 }
 
+function getCurrentTournamentDay(): number | null {
+  const now = new Date();
+  const todayLocalMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const tournamentLocalMidnight = new Date(2026, 5, 11).getTime();
+  const day = Math.floor((todayLocalMidnight - tournamentLocalMidnight) / 86_400_000) + 1;
+  if (day < 1 || day > 50) return null;
+  return day;
+}
+
 const STAGE_LABELS: Record<StageFilter, string> = {
   all: 'Todos',
   GROUP_STAGE: 'Fase de Grupos',
@@ -61,7 +70,7 @@ export default function MatchListPage({ isAuthenticated }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [stageFilter, setStageFilter] = useState<StageFilter>('all');
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(getCurrentTournamentDay());
   const [selectedTeam, setSelectedTeam] = useState<TeamFilter>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -179,12 +188,12 @@ export default function MatchListPage({ isAuthenticated }: Props) {
           {/* Stage filter */}
           {availableStages.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
-              <button key="all" onClick={() => { setStageFilter('all'); setSelectedDay(null); }} className={pillBase}
+              <button key="all" onClick={() => setStageFilter('all')} className={pillBase}
                 style={stageFilter === 'all' ? activePill : inactivePill}>
                 Todos
               </button>
               {availableStages.map((s) => (
-                <button key={s} onClick={() => { setStageFilter(s); setSelectedDay(null); }} className={pillBase}
+                <button key={s} onClick={() => setStageFilter(s)} className={pillBase}
                   style={stageFilter === s ? activePill : inactivePill}>
                   {STAGE_LABELS[s]}
                 </button>
@@ -209,22 +218,48 @@ export default function MatchListPage({ isAuthenticated }: Props) {
           {/* Day filter */}
           {availableDays.length > 0 && (
             <div className="flex items-center gap-3">
-              <label htmlFor="day-filter" className="shrink-0 text-sm font-bold text-wc-muted"
-                style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <label htmlFor="day-filter" className="shrink-0 text-sm font-bold"
+                style={{
+                  fontFamily: 'Barlow Condensed, sans-serif',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: selectedDay !== null ? '#F5A623' : '#5B6E8C',
+                }}>
                 Día:
               </label>
               <select
                 id="day-filter"
                 value={selectedDay ?? ''}
                 onChange={(e) => setSelectedDay(e.target.value === '' ? null : Number(e.target.value))}
-                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-wc-text focus:outline-none"
-                style={{ background: '#0D1829', border: '1px solid #152136', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.05em' }}
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold focus:outline-none"
+                style={{
+                  background: selectedDay !== null ? '#1A0F00' : '#0D1829',
+                  border: selectedDay !== null ? '1px solid #F5A623' : '1px solid #152136',
+                  color: selectedDay !== null ? '#F5A623' : '#E8EDF5',
+                  fontFamily: 'Barlow Condensed, sans-serif',
+                  letterSpacing: '0.05em',
+                  boxShadow: selectedDay !== null ? '0 0 12px rgba(245,166,35,0.15)' : 'none',
+                }}
               >
                 <option value="">Todos los días</option>
                 {availableDays.map((day) => (
                   <option key={day} value={day}>Día {day}</option>
                 ))}
               </select>
+              {selectedDay !== null && (
+                <button
+                  onClick={() => setSelectedDay(null)}
+                  className="shrink-0 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all hover:brightness-110"
+                  style={{
+                    background: 'rgba(245,166,35,0.15)',
+                    border: '1px solid rgba(245,166,35,0.3)',
+                    color: '#F5A623',
+                    fontFamily: 'Barlow Condensed, sans-serif',
+                  }}
+                >
+                  ✕ Quitar filtro
+                </button>
+              )}
             </div>
           )}
 

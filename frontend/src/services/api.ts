@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { Match, LeaderboardEntry, User, MyPrediction, BonusAnswer, AuditLog, AdminPrediction } from '../types';
 
-const api = axios.create({ baseURL: '', withCredentials: true });
+export const api = axios.create({ baseURL: '', withCredentials: true });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
