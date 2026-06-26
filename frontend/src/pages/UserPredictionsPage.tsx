@@ -318,8 +318,10 @@ export default function UserPredictionsPage() {
                     </div>
                     {m && m.homeScoreActual !== null && (
                       <div className="flex items-baseline justify-center gap-2">
-                        <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.65rem', fontWeight: 700, color: '#5B6E8C', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>REAL</span>
-                        <span className="tabular-nums" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1rem', color: '#5B6E8C', letterSpacing: '0.03em' }}>
+                        <span style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '0.65rem', fontWeight: 700, color: m.status === 'live' ? '#F03E3E' : '#5B6E8C', letterSpacing: '0.1em', textTransform: 'uppercase', flexShrink: 0 }}>
+                          {m.status === 'live' ? 'ACTUAL' : 'REAL'}
+                        </span>
+                        <span className="tabular-nums" style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: '1rem', color: m.status === 'live' ? '#F03E3E' : '#5B6E8C', letterSpacing: '0.03em' }}>
                           {m.homeScoreActual} – {m.awayScoreActual}
                         </span>
                       </div>

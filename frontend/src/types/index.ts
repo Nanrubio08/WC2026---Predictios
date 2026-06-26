@@ -13,7 +13,6 @@ export interface Match {
   stage: string | null;
   group: string | null;
   matchday: number | null;
-  minute: number | null;
   userPrediction?: { homeScorePredicted: number; awayScorePredicted: number; pointsEarned: number } | null;
 }
 

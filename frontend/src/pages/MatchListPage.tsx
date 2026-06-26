@@ -73,7 +73,6 @@ export default function MatchListPage({ isAuthenticated }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(getCurrentTournamentDay());
   const [selectedTeam, setSelectedTeam] = useState<TeamFilter>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [fetchTimestamp, setFetchTimestamp] = useState(Date.now());
 
   useEffect(() => {
     setLoading(true);
@@ -101,12 +100,12 @@ export default function MatchListPage({ isAuthenticated }: Props) {
     };
 
     loadMatches()
-      .then((data) => { setMatches(data); setFetchTimestamp(Date.now()); })
+      .then(setMatches)
       .catch(() => setError('No se pudieron cargar los partidos. Por favor intentá de nuevo.'))
       .finally(() => setLoading(false));
 
     const interval = setInterval(() => {
-      loadMatches().then((data) => { setMatches(data); setFetchTimestamp(Date.now()); }).catch(() => {});
+      loadMatches().then(setMatches).catch(() => {});
     }, 60_000);
 
     return () => clearInterval(interval);
@@ -316,7 +315,7 @@ export default function MatchListPage({ isAuthenticated }: Props) {
       {!loading && !error && filtered.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((m) => (
-            <MatchCard key={m.id} match={m} isAuthenticated={isAuthenticated} onPredictionSaved={() => setRefreshKey(k => k + 1)} fetchTimestamp={fetchTimestamp} />
+            <MatchCard key={m.id} match={m} isAuthenticated={isAuthenticated} onPredictionSaved={() => setRefreshKey(k => k + 1)} />
           ))}
         </div>
       )}
