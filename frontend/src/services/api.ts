@@ -140,6 +140,16 @@ export async function adminUpdateScore(matchId: number, homeScoreActual: number,
   return res.data;
 }
 
+export async function adminSyncFixtures(): Promise<{ message: string; upserted: number }> {
+  const res = await api.post('/api/admin/matches/sync');
+  return res.data;
+}
+
+export async function adminFinalizeMatch(matchId: number): Promise<Match> {
+  const res = await api.post<Match>(`/api/admin/matches/${matchId}/finalize`);
+  return res.data;
+}
+
 export async function adminFetchAuditLogs(): Promise<AuditLog[]> {
   const res = await api.get<AuditLog[]>('/api/admin/matches/audit');
   return res.data;

@@ -1,5 +1,5 @@
 import prisma from '../prisma';
-import { fetchLiveFixtures, fetchTodaysFixtures } from '../utils/apiFootball';
+import { fetchLiveFixtures, fetchTodaysFixtures, fetchRecentFixtures, type FDMatch } from '../utils/apiFootball';
 import { triggerScoring } from '../clients/scoringClient';
 import logger from '../utils/logger';
 
@@ -65,13 +65,37 @@ export async function pollLiveMatches(): Promise<void> {
     return;
   }
 
-  const [liveFixtures, todaysFixtures] = await Promise.all([
-    fetchLiveFixtures(COMPETITION),
-    fetchTodaysFixtures(COMPETITION),
-  ]);
+  let liveFixtures: FDMatch[] = [];
+  let todaysFixtures: FDMatch[] = [];
+  let recentFixtures: FDMatch[] = [];
+
+  try {
+    liveFixtures = await fetchLiveFixtures(COMPETITION);
+  } catch (err) {
+    logger.error('pollLiveMatches: failed to fetch live fixtures', { error: err });
+  }
+
+  try {
+    todaysFixtures = await fetchTodaysFixtures(COMPETITION);
+  } catch (err) {
+    logger.error('pollLiveMatches: failed to fetch today fixtures', { error: err });
+  }
+
+  try {
+    recentFixtures = await fetchRecentFixtures(COMPETITION, 3);
+  } catch (err) {
+    logger.error('pollLiveMatches: failed to fetch recent fixtures', { error: err });
+  }
 
   const seen = new Set<number>();
-  const allMatches = [...liveFixtures, ...todaysFixtures];
+  const allMatches = [...liveFixtures, ...todaysFixtures, ...recentFixtures];
+
+  // If both fetches failed, try to process any match that is still in 'live' status in DB
+  // by fetching them from the season fixtures
+  if (allMatches.length === 0) {
+    logger.warn('pollLiveMatches: no fixtures from API, cannot update live matches');
+    return;
+  }
 
   for (const match of allMatches) {
     if (seen.has(match.id)) continue;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminFetchMatches, adminUpdateScore, adminFetchAuditLogs, adminExportLeaderboardCsv, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminUpdateUser, adminDeleteUser, adminFetchInviteCodes, adminGenerateCodes, adminExportInviteCodesCsv, adminFetchPredictionsByUser, adminRemoveFromLeaderboard, adminFetchBonusAnswers, type InviteCodeRow, type AdminUserPredictionSummary, type AdminBonusAnswer } from '../services/api';
+import { adminFetchMatches, adminUpdateScore, adminSyncFixtures, adminFinalizeMatch, adminFetchAuditLogs, adminExportLeaderboardCsv, adminGetBonusConfig, adminDeclareWinner, adminFetchUsers, adminUpdateUser, adminDeleteUser, adminFetchInviteCodes, adminGenerateCodes, adminExportInviteCodesCsv, adminFetchPredictionsByUser, adminRemoveFromLeaderboard, adminFetchBonusAnswers, type InviteCodeRow, type AdminUserPredictionSummary, type AdminBonusAnswer } from '../services/api';
 import { useAuthToken } from '../hooks/useAuthToken';
 import type { Match, AuditLog } from '../types';
 
@@ -1096,6 +1096,8 @@ export default function AdminPage() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'matches' | 'audit' | 'bonus' | 'users' | 'codes' | 'predictions' | 'ranking'>('matches');
+  const [syncing, setSyncing] = useState(false);
+  const [finalizing, setFinalizing] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') { navigate('/'); return; }
@@ -1109,6 +1111,30 @@ export default function AdminPage() {
     setMatches((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
     adminFetchAuditLogs().then(setAuditLogs).catch(() => {});
   };
+
+  async function handleSyncNow() {
+    setSyncing(true);
+    try {
+      await adminSyncFixtures();
+      const [m, a] = await Promise.all([adminFetchMatches(), adminFetchAuditLogs()]);
+      setMatches(m);
+      setAuditLogs(a);
+    } catch {
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  async function handleFinalize(matchId: number) {
+    setFinalizing(matchId);
+    try {
+      const updated = await adminFinalizeMatch(matchId);
+      handleMatchUpdated(updated);
+    } catch {
+    } finally {
+      setFinalizing(null);
+    }
+  }
 
   const pillBase = 'rounded-full px-4 py-1.5 text-sm font-bold transition-all cursor-pointer';
   const activeStyle = { background: 'linear-gradient(135deg, #F5A623 0%, #E8920F 100%)', color: '#04070E', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase' as const };
@@ -1154,11 +1180,30 @@ export default function AdminPage() {
 
       {!loading && tab === 'matches' && (
         <div className="card overflow-hidden">
+          <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid rgba(21,33,54,0.8)' }}>
+            <span className="text-xs font-bold text-wc-muted uppercase" style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>
+              {matches.length} partidos
+            </span>
+            <button
+              onClick={handleSyncNow}
+              disabled={syncing}
+              className="ml-auto rounded-lg px-4 py-1.5 text-xs font-black uppercase transition-all"
+              style={{
+                background: syncing ? 'rgba(0,200,122,0.1)' : 'linear-gradient(135deg,#00C87A,#00A864)',
+                color: '#04070E',
+                fontFamily: 'Barlow Condensed, sans-serif',
+                letterSpacing: '0.08em',
+                opacity: syncing ? 0.6 : 1,
+              }}
+            >
+              {syncing ? 'SINCRONIZANDO…' : '🔄 SINCRONIZAR AHORA'}
+            </button>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(21,33,54,0.8)', background: 'rgba(245,166,35,0.04)' }}>
-                  {['ID', 'PARTIDO', 'ESTADO', 'FECHA', 'MARCADOR'].map((h) => (
+                  {['ID', 'PARTIDO', 'ESTADO', 'FECHA', 'MARCADOR', 'ACCIÓN'].map((h) => (
                     <th key={h} className="py-3 px-4 text-left text-xs font-bold text-wc-muted"
                       style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.08em' }}>{h}</th>
                   ))}
@@ -1168,6 +1213,7 @@ export default function AdminPage() {
                 {matches.map((m) => {
                   const kickoff = new Date(m.kickoffTime);
                   const statusColor = m.status === 'live' ? '#F03E3E' : m.status === 'finished' ? '#5B6E8C' : '#00C87A';
+                  const notFinished = m.status !== 'finished';
                   return (
                     <tr key={m.id} style={{ borderBottom: '1px solid rgba(21,33,54,0.5)' }}>
                       <td className="py-3 px-4 text-xs text-wc-dim tabular-nums">{m.id}</td>
@@ -1185,6 +1231,25 @@ export default function AdminPage() {
                       </td>
                       <td className="py-3 px-4">
                         <ScoreEditor match={m} onUpdated={handleMatchUpdated} />
+                      </td>
+                      <td className="py-3 px-4">
+                        {notFinished && (
+                          <button
+                            onClick={() => handleFinalize(m.id)}
+                            disabled={finalizing === m.id}
+                            className="rounded px-3 py-1 text-xs font-bold uppercase transition-all"
+                            style={{
+                              background: finalizing === m.id ? 'rgba(91,110,140,0.1)' : 'rgba(245,166,35,0.12)',
+                              border: '1px solid rgba(245,166,35,0.3)',
+                              color: finalizing === m.id ? '#5B6E8C' : '#F5A623',
+                              fontFamily: 'Barlow Condensed, sans-serif',
+                              letterSpacing: '0.06em',
+                              opacity: finalizing === m.id ? 0.5 : 1,
+                            }}
+                          >
+                            {finalizing === m.id ? '…' : 'FINALIZAR'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

@@ -3,10 +3,10 @@ import { syncFixtures } from '../services/syncFixtures';
 import logger from '../utils/logger';
 
 export function registerSyncFixturesJob(): void {
-  // Full sync every 30 min — catches TBD matches, metadata changes, & recovers state.
+  // Full sync every 10 min — catches TBD matches, metadata changes, & recovers state.
   // Live scores & finished transitions are handled by pollLiveMatches (every 1 min).
   // Initial sync also runs on startup via the first cron tick.
-  cron.schedule('*/30 * * * *', async () => {
+  cron.schedule('*/10 * * * *', async () => {
     logger.info('Starting full fixture sync…');
     try {
       const result = await syncFixtures();
@@ -16,5 +16,5 @@ export function registerSyncFixturesJob(): void {
     }
   });
 
-  logger.info('Sync job registered (every 30 min)');
+  logger.info('Sync job registered (every 10 min)');
 }

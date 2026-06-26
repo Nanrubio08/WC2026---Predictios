@@ -90,3 +90,18 @@ export async function fetchTodaysFixtures(competition: string): Promise<FDMatch[
   );
   return res.data.matches;
 }
+
+export async function fetchRecentFixtures(competition: string, daysBack = 3): Promise<FDMatch[]> {
+  const today = new Date();
+  const from = new Date(today);
+  from.setDate(from.getDate() - daysBack);
+  const dateFrom = from.toISOString().split('T')[0];
+  const dateTo = today.toISOString().split('T')[0];
+  const res = await withRetry(() =>
+    client.get<{ matches: FDMatch[] }>(
+      `/competitions/${competition}/matches`,
+      { params: { dateFrom, dateTo } },
+    )
+  );
+  return res.data.matches;
+}

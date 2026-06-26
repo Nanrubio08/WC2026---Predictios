@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAdmin } from '../middleware/requireAdmin';
 import { updateMatchScoreController } from '../controllers/updateMatchScoreController';
+import { finalizeMatchController } from '../controllers/finalizeMatchController';
 import { listMatchesAdminController } from '../controllers/listMatchesAdminController';
 import { listAuditLogsController } from '../controllers/listAuditLogsController';
 import { syncFixtures } from '../services/syncFixtures';
@@ -18,6 +19,13 @@ router.get('/', requireAdmin, (req, res) => {
 router.post('/:id/score', requireAdmin, (req, res) => {
   updateMatchScoreController(req as any, res).catch((err) => {
     console.error('updateMatchScore error', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
+});
+
+router.post('/:id/finalize', requireAdmin, (req, res) => {
+  finalizeMatchController(req as any, res).catch((err) => {
+    console.error('finalizeMatch error', err);
     res.status(500).json({ error: 'Internal server error' });
   });
 });

@@ -16,13 +16,20 @@ function mapStatus(status: string): MatchStatusValue {
 }
 
 export async function syncFixtures(): Promise<{ upserted: number }> {
-  const [seasonMatches, liveMatches] = await Promise.all([
-    fetchFixtures(COMPETITION, SEASON),
-    fetchLiveFixtures(COMPETITION).catch((err) => {
-      logger.warn('Failed to fetch live fixtures during sync, continuing with season data', { error: err });
-      return [] as FDMatch[];
-    }),
-  ]);
+  let seasonMatches: FDMatch[] = [];
+  let liveMatches: FDMatch[] = [];
+
+  try {
+    seasonMatches = await fetchFixtures(COMPETITION, SEASON);
+  } catch (err) {
+    logger.error('syncFixtures: failed to fetch season fixtures, will only use live/today data', { error: err });
+  }
+
+  try {
+    liveMatches = await fetchLiveFixtures(COMPETITION);
+  } catch (err) {
+    logger.warn('syncFixtures: failed to fetch live fixtures', { error: err });
+  }
 
   // Merge: live data takes precedence over season data for the same match ID
   const liveById = new Map(liveMatches.map((m) => [m.id, m]));
@@ -32,6 +39,11 @@ export async function syncFixtures(): Promise<{ upserted: number }> {
     if (!matches.some((m) => m.id === lm.id)) {
       matches.push(lm);
     }
+  }
+
+  if (matches.length === 0) {
+    logger.warn('syncFixtures: no match data available from any source');
+    return { upserted: 0 };
   }
 
   let upserted = 0;
