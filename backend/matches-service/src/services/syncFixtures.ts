@@ -54,6 +54,19 @@ export async function syncFixtures(): Promise<{ upserted: number }> {
 
     // Read current DB state before upserting to detect state transitions
     const existing = await prisma.match.findUnique({ where: { id: match.id } });
+
+    // Time-based fallback for live status (same heuristic as pollLiveMatches).
+    // If kickoff passed 15+ min ago but API still shows SCHEDULED, assume live.
+    // This handles API delays in updating match status.
+    let effectiveData = data;
+    if (newStatus === 'scheduled' && existing?.status === 'scheduled') {
+      const kickoffPassed = Date.now() - data.kickoffTime.getTime();
+      if (kickoffPassed > 15 * 60_000) {
+        effectiveData = { ...data, status: 'live' as const };
+      }
+    }
+    const effectiveNewStatus = effectiveData.status;
+
     const wasNotFinished = !existing || existing.status !== 'finished';
     const wasFinishedWithNullScores =
       existing?.status === 'finished' &&
@@ -70,18 +83,18 @@ export async function syncFixtures(): Promise<{ upserted: number }> {
 
     // Never revert a match that is live or finished back to scheduled via automated sync
     const safeStatus = isAlreadyFinished ? ('finished' as const) :
-      existing?.status === 'live' && data.status !== 'live' ? ('live' as const) :
-      data.status;
+      existing?.status === 'live' && effectiveNewStatus !== 'live' ? ('live' as const) :
+      effectiveNewStatus;
 
     const updateData = {
-      ...data,
+      ...effectiveData,
       status: safeStatus,
       homeScoreActual: preserveExistingScores
         ? existing.homeScoreActual
-        : (data.homeScoreActual ?? existing?.homeScoreActual ?? null),
+        : (effectiveData.homeScoreActual ?? existing?.homeScoreActual ?? null),
       awayScoreActual: preserveExistingScores
         ? existing.awayScoreActual
-        : (data.awayScoreActual ?? existing?.awayScoreActual ?? null),
+        : (effectiveData.awayScoreActual ?? existing?.awayScoreActual ?? null),
     };
     const finalHasScores =
       updateData.homeScoreActual !== null && updateData.awayScoreActual !== null;
@@ -89,13 +102,14 @@ export async function syncFixtures(): Promise<{ upserted: number }> {
     await prisma.match.upsert({
       where: { id: match.id },
       update: updateData,
-      create: { id: match.id, ...data },
+      create: { id: match.id, ...effectiveData },
     });
     upserted++;
 
     // Trigger scoring when:
     // (a) match just transitioned to finished with scores, OR
     // (b) match was already finished but had null scores and now has scores
+    // Note: uses original newStatus (from API), not time-based fallback.
     const shouldScore = newStatus === 'finished' && finalHasScores &&
       (wasNotFinished || wasFinishedWithNullScores);
 

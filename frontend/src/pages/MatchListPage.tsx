@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import MatchCard from '../components/MatchCard';
-import { fetchMatches, fetchMyPredictions } from '../services/api';
+import { fetchMatches, fetchMyPredictions, adminSyncFixtures } from '../services/api';
+import { useAuthToken } from '../hooks/useAuthToken';
 import type { Match } from '../types';
 
 interface Props {
@@ -73,6 +74,21 @@ export default function MatchListPage({ isAuthenticated }: Props) {
   const [selectedDay, setSelectedDay] = useState<number | null>(getCurrentTournamentDay());
   const [selectedTeam, setSelectedTeam] = useState<TeamFilter>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const { user } = useAuthToken();
+  const isAdmin = user?.role === 'admin';
+
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      await adminSyncFixtures();
+      setRefreshKey((k) => k + 1);
+    } catch {
+      // ignore
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -282,6 +298,26 @@ export default function MatchListPage({ isAuthenticated }: Props) {
                   <option key={team} value={team}>{team}</option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {isAdmin && (
+            <div className="flex justify-end border-t pt-3"
+              style={{ borderColor: 'rgba(245,166,35,0.1)' }}>
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                className="rounded-full px-4 py-1.5 text-xs font-bold uppercase transition-all hover:brightness-110"
+                style={{
+                  background: 'rgba(0,200,122,0.1)',
+                  border: '1px solid rgba(0,200,122,0.25)',
+                  color: '#00C87A',
+                  fontFamily: 'Barlow Condensed, sans-serif',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                {syncing ? 'SINCRONIZANDO…' : '⟳ SINCRONIZAR FIXTURES'}
+              </button>
             </div>
           )}
         </div>

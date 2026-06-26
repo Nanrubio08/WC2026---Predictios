@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchMatches, api } from '../services/api';
-import { useAuthToken } from '../hooks/useAuthToken';
+import { fetchMatches } from '../services/api';
 import type { Match } from '../types';
 
 interface TeamStats {
@@ -122,10 +121,6 @@ export default function GroupStandingsPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [syncing, setSyncing] = useState(false);
-  const { user } = useAuthToken();
-  const isAdmin = user?.role === 'admin';
-
   const load = (silent = false) => {
     if (!silent) setLoading(true);
     fetchMatches()
@@ -139,18 +134,6 @@ export default function GroupStandingsPage() {
     const interval = setInterval(() => load(true), 60_000);
     return () => clearInterval(interval);
   }, []);
-
-  async function handleSync() {
-    setSyncing(true);
-    try {
-      await api.post('/api/admin/matches/sync');
-      load();
-    } catch {
-      // ignore
-    } finally {
-      setSyncing(false);
-    }
-  }
 
   const standings = useMemo(() => calcGroupStandings(matches), [matches]);
   const sortedGroups = Object.keys(standings).sort();
@@ -193,42 +176,15 @@ export default function GroupStandingsPage() {
           <p className="text-wc-dim text-sm max-w-sm mx-auto">
             Las posiciones se mostrarán aquí una vez que los fixtures de la fase de grupos sean sincronizados.
           </p>
-          {isAdmin && (
-            <button
-              onClick={handleSync}
-              disabled={syncing}
-              className="btn-primary mt-2"
-              style={{ fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase' }}
-            >
-              {syncing ? 'Sincronizando…' : '⟳ Sincronizar Fixtures (Admin)'}
-            </button>
-          )}
-          {!isAdmin && (
-            <p className="text-wc-dim text-xs">Contactá al administrador para sincronizar los datos.</p>
-          )}
         </div>
       )}
 
       {!loading && !error && sortedGroups.length > 0 && (
-        <>
-          {isAdmin && (
-            <div className="mb-4 flex justify-end">
-              <button
-                onClick={handleSync}
-                disabled={syncing}
-                className="rounded-full px-4 py-1.5 text-xs font-bold uppercase"
-                style={{ background: 'rgba(0,200,122,0.1)', border: '1px solid rgba(0,200,122,0.25)', color: '#00C87A', fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em' }}
-              >
-                {syncing ? 'Sincronizando…' : '⟳ Re-sincronizar'}
-              </button>
-            </div>
-          )}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {sortedGroups.map((g) => (
-              <GroupTable key={g} group={g} teams={standings[g]} />
-            ))}
-          </div>
-        </>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {sortedGroups.map((g) => (
+            <GroupTable key={g} group={g} teams={standings[g]} />
+          ))}
+        </div>
       )}
     </div>
   );

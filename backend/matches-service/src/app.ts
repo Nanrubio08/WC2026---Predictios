@@ -10,7 +10,7 @@ import matchesRouter from './routes/matchesRoutes';
 import internalMatchesRouter from './routes/internalMatchesRoutes';
 import internalAuditRouter from './routes/internalAuditRoutes';
 import adminMatchesRouter from './routes/adminMatchesRoutes';
-import { registerSyncFixturesJob } from './jobs/syncFixtures';
+import { registerSyncFixturesJob, runInitialSync } from './jobs/syncFixtures';
 import { registerPollLiveMatchesJob } from './jobs/pollLiveMatches';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './swagger';
@@ -33,13 +33,12 @@ app.use('/internal/matches', internalMatchesRouter);
 app.use('/internal/audit', internalAuditRouter);
 app.use('/api/admin/matches', adminMatchesRouter);
 
-registerSyncFixturesJob();
-registerPollLiveMatchesJob();
-
-app.use(errorHandler);
-
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   logger.info(`matches-service running on port ${PORT}`);
+
+  await runInitialSync();
+  registerSyncFixturesJob();
+  registerPollLiveMatchesJob();
 });
 
 export default app;
