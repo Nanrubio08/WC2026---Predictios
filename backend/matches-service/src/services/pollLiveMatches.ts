@@ -98,7 +98,7 @@ async function processMatch(match: FDMatch): Promise<boolean> {
       && scores.homeScoreActual !== null && scores.awayScoreActual !== null;
 
     const safeStatus = isAlreadyFinished ? 'finished' as const :
-      stored.status === 'live' && effectiveStatus !== 'live' ? 'live' as const :
+      stored.status === 'live' && effectiveStatus === 'scheduled' ? 'live' as const :
       effectiveStatus;
 
     const safeHomeScore = preserveScores ? stored.homeScoreActual : scores.homeScoreActual;

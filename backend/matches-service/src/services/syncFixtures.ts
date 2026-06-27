@@ -83,7 +83,7 @@ export async function syncFixtures(): Promise<{ upserted: number }> {
 
     // Never revert a match that is live or finished back to scheduled via automated sync
     const safeStatus = isAlreadyFinished ? ('finished' as const) :
-      existing?.status === 'live' && effectiveNewStatus !== 'live' ? ('live' as const) :
+      existing?.status === 'live' && effectiveNewStatus === 'scheduled' ? ('live' as const) :
       effectiveNewStatus;
 
     const updateData = {
